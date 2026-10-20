@@ -6,7 +6,7 @@ export const viewport: Viewport = {
   themeColor: "#09090b",
 };
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro.pk";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -66,10 +66,16 @@ export const metadata: Metadata = {
     siteName: "Bellaro",
     images: [
       {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Bellaro - Handcrafted Luxury Loafers, Moccasins & Perfumes",
+      },
+      {
         url: "/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: "Bellaro - Handcrafted Shoes & Signature Perfumes",
+        alt: "Bellaro Official Emblem",
       },
     ],
     locale: "en_PK",
@@ -80,7 +86,7 @@ export const metadata: Metadata = {
     title: "Bellaro | Handcrafted Loafers, Moccasins, Slides & Signature Perfumes",
     description:
       "Handcrafted footwear engineered for cloud comfort alongside bespoke artisanal perfumes.",
-    images: ["/icon-512x512.png"],
+    images: ["/images/og-image.png"],
     creator: "@bellaro.pk",
     site: "@bellaro.pk",
   },

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
   ArrowLeftIcon,
   Blocks,
@@ -53,11 +54,20 @@ export default function Navbar({ user }: NavbarProps) {
     <nav className="flex w-full shrink-0 flex-col border-b border-neutral-200 bg-white px-4 py-4 md:min-h-screen md:w-64 md:border-b-0 md:border-r md:px-5 md:py-8 print:hidden">
       <div className="border-b border-neutral-100 pb-4 md:pb-6">
         <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl md:text-2xl font-bold font-[Gebuk] tracking-tight truncate">
-              Bellaro Admin
-            </h1>
-            <p className="text-xs text-neutral-400 mt-0.5 truncate">Store Operations Console</p>
+          <div className="min-w-0 flex-1 flex items-center gap-2.5">
+            <Image
+              src="/images/logo-transparent.png"
+              alt="Bellaro Logo"
+              width={36}
+              height={36}
+              className="h-9 w-auto object-contain shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-2xl font-bold font-[Gebuk] tracking-tight truncate leading-tight">
+                Bellaro
+              </h1>
+              <p className="text-xs text-neutral-400 truncate">Store Admin Console</p>
+            </div>
           </div>
           <div className="shrink-0">
             <AdminNotificationCenter />

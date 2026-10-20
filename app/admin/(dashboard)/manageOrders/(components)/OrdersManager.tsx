@@ -331,10 +331,13 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
         <body>
           <div class="invoice-card">
             <div class="header-bar">
-              <div>
-                <div class="brand-title">BELLARO</div>
-                <div class="brand-sub">Store Fulfillment & Official Tax Invoice</div>
-                <div class="brand-sub">Helpline: +92 339 4015589 • Karachi, Pakistan</div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="/images/logo.png" alt="Bellaro" style="height: 46px; width: auto; object-fit: contain;" />
+                <div>
+                  <div class="brand-title">BELLARO</div>
+                  <div class="brand-sub">Store Fulfillment & Official Tax Invoice</div>
+                  <div class="brand-sub">Helpline: +92 339 4015589 • Karachi, Pakistan</div>
+                </div>
               </div>
               <div class="order-meta">
                 <div class="order-id">#ORD-${order.id.toString().padStart(4, "0")}</div>

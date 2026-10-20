@@ -149,7 +149,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = dbProduct || curatedProductsMap[productId];
   if (!product) return { title: "Product Not Found" };
 
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro.pk";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
   const productUrl = `${siteUrl}/products/${product.id}`;
 
   return {
@@ -191,7 +191,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const reviewsSummary = await getProductReviews(productId);
 
   const inStock = Number(product.stock) > 0;
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro.pk";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
 
   const productJsonLd = {
     "@context": "https://schema.org",

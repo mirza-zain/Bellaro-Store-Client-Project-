@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Mail, MapPin, Phone, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 
 export default function Footer() {
@@ -58,11 +59,20 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Brand Info & Newsletter */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex flex-col">
-              <h3 className="text-3xl font-extrabold tracking-tight uppercase">Bellaro</h3>
-              <span className="text-[10px] font-semibold tracking-widest uppercase text-neutral-400">
-                Footwear & Parfums • Karachi
-              </span>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/images/logo-white.png"
+                alt="Bellaro Official Logo"
+                width={50}
+                height={50}
+                className="h-12 w-auto object-contain brightness-95"
+              />
+              <div className="flex flex-col">
+                <h3 className="text-3xl font-extrabold tracking-tight uppercase leading-none">Bellaro</h3>
+                <span className="text-[10px] font-semibold tracking-widest uppercase text-neutral-400 mt-1">
+                  Footwear & Parfums • Karachi
+                </span>
+              </div>
             </div>
             <p className="text-neutral-400 text-sm max-w-sm leading-relaxed">
               Handcrafted in Karachi. Renowned for luxury horsebit loafers, driving moccasins, designer cross-strap slides, and long-lasting artisanal perfumes.

@@ -2,6 +2,7 @@
 
 import { ChevronDown, Menu, ShoppingBag, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useCart } from "@/app/context/CartContext";
 
@@ -78,13 +79,23 @@ export default function Navbar() {
       <nav className="relative w-full py-4.5 flex justify-between items-center px-5 md:px-10 z-50 bg-white border-b border-neutral-100 shadow-xs">
         {/* Brand Logo */}
         <div className="md:mx-2">
-          <Link href="/" className="group flex flex-col items-start">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 uppercase group-hover:text-neutral-700 transition">
-              Bellaro
-            </h2>
-            <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-neutral-400 -mt-1">
-              Step Into Style • Parfums
-            </span>
+          <Link href="/" className="group flex items-center gap-3">
+            <Image
+              src="/images/logo-transparent.png"
+              alt="Bellaro Official Logo"
+              width={48}
+              height={48}
+              className="h-11 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              priority
+            />
+            <div className="flex flex-col">
+              <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 uppercase group-hover:text-neutral-700 transition leading-none">
+                Bellaro
+              </span>
+              <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-neutral-400 mt-1">
+                Step Into Style • Parfums
+              </span>
+            </div>
           </Link>
         </div>
 
@@ -211,11 +222,20 @@ export default function Navbar() {
           <div className="fixed inset-0 z-50 bg-white flex flex-col justify-between p-6 md:hidden overflow-y-auto">
             {/* Mobile Menu Header */}
             <div className="flex justify-between items-center w-full pb-4 border-b border-neutral-100">
-              <Link href="/" onClick={() => setMenuOpen(false)} className="flex flex-col">
-                <h2 className="text-2xl font-extrabold uppercase tracking-tight text-neutral-950">Bellaro</h2>
-                <span className="text-[9px] font-semibold tracking-widest uppercase text-neutral-400 -mt-1">
-                  Step Into Style • Parfums
-                </span>
+              <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-2.5">
+                <Image
+                  src="/images/logo-transparent.png"
+                  alt="Bellaro Logo"
+                  width={40}
+                  height={40}
+                  className="h-10 w-auto object-contain"
+                />
+                <div className="flex flex-col">
+                  <span className="text-2xl font-extrabold uppercase tracking-tight text-neutral-950 leading-none">Bellaro</span>
+                  <span className="text-[9px] font-semibold tracking-widest uppercase text-neutral-400 mt-1">
+                    Step Into Style • Parfums
+                  </span>
+                </div>
               </Link>
               <div className="flex items-center gap-6">
                 <button

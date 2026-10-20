@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Lock,
   Mail,
@@ -104,8 +105,15 @@ export default function AdminLoginForm({
       <div className="w-full max-w-md relative z-10">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white text-black shadow-xl mb-4">
-            <ShieldCheck className="w-7 h-7" />
+          <div className="inline-flex items-center justify-center w-18 h-18 rounded-2xl bg-white p-2.5 shadow-2xl mb-4 border border-white/20">
+            <Image
+              src="/images/logo.png"
+              alt="Bellaro Logo"
+              width={64}
+              height={64}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white uppercase tracking-wider">
             Bellaro
