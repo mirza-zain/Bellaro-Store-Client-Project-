@@ -1019,7 +1019,7 @@ export default function CheckoutPage() {
                     <div className="flex items-center justify-between font-semibold text-neutral-800">
                       <div className="flex items-center gap-1.5">
                         <Building2 className="w-3.5 h-3.5 text-neutral-600" />
-                        <span className="font-bold text-neutral-900">Bank AL Habib</span>
+                        <span className="font-bold text-neutral-900">Meezan Bank</span>
                       </div>
                       <span className="px-1.5 py-0.5 bg-neutral-100 rounded text-[10px] font-medium text-neutral-600">Official Account</span>
                     </div>
@@ -1027,17 +1027,17 @@ export default function CheckoutPage() {
                     <div className="space-y-1.5 pt-1 border-t border-neutral-100">
                       <div>
                         <span className="text-[11px] text-neutral-400 block">Account Title</span>
-                        <span className="text-neutral-900 font-semibold text-xs">Kamran Dawood</span>
+                        <span className="text-neutral-900 font-semibold text-xs">Bellaro Official</span>
                       </div>
 
                       <div className="flex items-center justify-between gap-1">
                         <div>
                           <span className="text-[11px] text-neutral-400 block">Account Number</span>
-                          <span className="text-neutral-900 font-mono font-semibold select-all text-xs">1082-0078-011366-01-0</span>
+                          <span className="text-neutral-900 font-mono font-semibold select-all text-xs">0101-0105-001234-01-0</span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleCopyBankField("10820078011366010", "acc")}
+                          onClick={() => handleCopyBankField("01010105001234010", "acc")}
                           className="px-2 py-1 text-[11px] font-medium rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition flex items-center gap-1 shrink-0"
                           title="Copy Account Number"
                         >
@@ -1058,11 +1058,11 @@ export default function CheckoutPage() {
                       <div className="flex items-center justify-between gap-1">
                         <div>
                           <span className="text-[11px] text-neutral-400 block">IBAN (Universal)</span>
-                          <span className="text-neutral-900 font-mono text-[11px] select-all">PK89BAHL1082007801136601</span>
+                          <span className="text-neutral-900 font-mono text-[11px] select-all">PK00MEZN0000001234567890</span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleCopyBankField("PK89BAHL1082007801136601", "iban")}
+                          onClick={() => handleCopyBankField("PK00MEZN0000001234567890", "iban")}
                           className="px-2 py-1 text-[11px] font-medium rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition flex items-center gap-1 shrink-0"
                           title="Copy IBAN"
                         >
@@ -1082,7 +1082,7 @@ export default function CheckoutPage() {
 
                       <div className="text-[11px] text-neutral-500 pt-0.5">
                         <span>Branch: </span>
-                        <span className="text-neutral-700 font-medium">Garden West, Karachi (Code 1082)</span>
+                        <span className="text-neutral-700 font-medium">Zamzama DHA Phase 5, Karachi</span>
                       </div>
                     </div>
                   </div>
@@ -1106,10 +1106,10 @@ export default function CheckoutPage() {
                           <span className="font-semibold text-neutral-800">2.</span> Choose <span className="font-semibold text-neutral-800">Send Money → Bank Transfer</span>.
                         </p>
                         <p>
-                          <span className="font-semibold text-neutral-800">3.</span> Select <span className="font-semibold text-neutral-800">Bank AL Habib</span> & paste the account or IBAN.
+                          <span className="font-semibold text-neutral-800">3.</span> Select <span className="font-semibold text-neutral-800">Meezan Bank</span> & paste the account or IBAN.
                         </p>
                         <p>
-                          <span className="font-semibold text-neutral-800">4.</span> Verify title is <span className="font-semibold text-neutral-900">Kamran Dawood</span>, complete payment, and upload the receipt screenshot below.
+                          <span className="font-semibold text-neutral-800">4.</span> Verify title is <span className="font-semibold text-neutral-900">Bellaro Official</span>, complete payment, and upload the receipt screenshot below.
                         </p>
                       </div>
                     </div>
