@@ -7,7 +7,7 @@ import { nextCookies } from "better-auth/next-js";
 const productionUrl =
   process.env.BETTER_AUTH_URL ||
   process.env.NEXT_PUBLIC_APP_URL ||
-  "https://bellaro-store.vercel.app";
+  "https://www.bellaro.pk/";
 const localUrl = "http://localhost:3000";
 
 export const auth = betterAuth({
