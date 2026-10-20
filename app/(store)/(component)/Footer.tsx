@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { ArrowRight, Mail, MapPin, Phone, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 
 export default function Footer() {
+  const pathname = usePathname();
   const [subscribed, setSubscribed] = useState(false);
   const [email, setEmail] = useState("");
 
@@ -17,6 +19,18 @@ export default function Footer() {
       setTimeout(() => setSubscribed(false), 4000);
     }
   };
+
+  if (pathname === "/checkout") {
+    return (
+      <footer className="w-full py-6 mt-8 text-center text-xs text-neutral-500 border-t border-neutral-200">
+        <p className="flex items-center justify-center gap-1.5 font-medium text-neutral-700">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>256-Bit Encrypted Secure Checkout • Helpline: +92 339 4015589</span>
+        </p>
+        <p className="mt-1">© 2026 Bellaro PK. Step Into Style.</p>
+      </footer>
+    );
+  }
   return (
     <footer className="w-full bg-neutral-900 text-white rounded-3xl mt-16 overflow-hidden">
       {/* Top Value Proposition Bar */}

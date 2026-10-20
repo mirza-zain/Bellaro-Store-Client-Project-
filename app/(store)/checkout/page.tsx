@@ -1013,112 +1013,70 @@ export default function CheckoutPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                  {/* Bank Option */}
-                  <div className="p-3.5 bg-white rounded-xl border border-neutral-200 space-y-2">
-                    <div className="flex items-center justify-between font-semibold text-neutral-800">
-                      <div className="flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-neutral-600" />
-                        <span className="font-bold text-neutral-900">Meezan Bank</span>
-                      </div>
-                      <span className="px-1.5 py-0.5 bg-neutral-100 rounded text-[10px] font-medium text-neutral-600">Official Account</span>
+                <div className="p-3.5 sm:p-4 bg-white rounded-xl border border-neutral-200 space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="font-bold text-neutral-900 text-sm">Meezan Bank</span>
+                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-semibold">Title: Bellaro Official</span>
                     </div>
+                    <span className="text-[10px] text-neutral-400 hidden sm:inline">Zamzama DHA Phase 5, Karachi</span>
+                  </div>
 
-                    <div className="space-y-1.5 pt-1 border-t border-neutral-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="flex items-center justify-between p-2.5 bg-neutral-50 rounded-lg border border-neutral-200/80">
                       <div>
-                        <span className="text-[11px] text-neutral-400 block">Account Title</span>
-                        <span className="text-neutral-900 font-semibold text-xs">Bellaro Official</span>
+                        <span className="text-[10px] text-neutral-500 uppercase tracking-wider block font-semibold">Account Number</span>
+                        <span className="text-neutral-900 font-mono font-bold text-xs select-all">0101-0105-001234-01-0</span>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyBankField("01010105001234010", "acc")}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition flex items-center gap-1 shrink-0 cursor-pointer"
+                      >
+                        {copiedBankField === "acc" ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span className="text-emerald-700">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 text-neutral-500" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
 
-                      <div className="flex items-center justify-between gap-1">
-                        <div>
-                          <span className="text-[11px] text-neutral-400 block">Account Number</span>
-                          <span className="text-neutral-900 font-mono font-semibold select-all text-xs">0101-0105-001234-01-0</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyBankField("01010105001234010", "acc")}
-                          className="px-2 py-1 text-[11px] font-medium rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition flex items-center gap-1 shrink-0"
-                          title="Copy Account Number"
-                        >
-                          {copiedBankField === "acc" ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span className="text-emerald-700 font-semibold">Copied</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3 text-neutral-500" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
+                    <div className="flex items-center justify-between p-2.5 bg-neutral-50 rounded-lg border border-neutral-200/80">
+                      <div>
+                        <span className="text-[10px] text-neutral-500 uppercase tracking-wider block font-semibold">IBAN (Universal)</span>
+                        <span className="text-neutral-900 font-mono text-xs select-all">PK00MEZN0000001234567890</span>
                       </div>
-
-                      <div className="flex items-center justify-between gap-1">
-                        <div>
-                          <span className="text-[11px] text-neutral-400 block">IBAN (Universal)</span>
-                          <span className="text-neutral-900 font-mono text-[11px] select-all">PK00MEZN0000001234567890</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyBankField("PK00MEZN0000001234567890", "iban")}
-                          className="px-2 py-1 text-[11px] font-medium rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition flex items-center gap-1 shrink-0"
-                          title="Copy IBAN"
-                        >
-                          {copiedBankField === "iban" ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span className="text-emerald-700 font-semibold">Copied</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3 text-neutral-500" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      <div className="text-[11px] text-neutral-500 pt-0.5">
-                        <span>Branch: </span>
-                        <span className="text-neutral-700 font-medium">Zamzama DHA Phase 5, Karachi</span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyBankField("PK00MEZN0000001234567890", "iban")}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition flex items-center gap-1 shrink-0 cursor-pointer"
+                      >
+                        {copiedBankField === "iban" ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span className="text-emerald-700">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 text-neutral-500" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
 
-                  {/* Transfer Guide Card */}
-                  <div className="p-3.5 bg-white rounded-xl border border-neutral-200 space-y-2 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between font-semibold text-neutral-800">
-                        <div className="flex items-center gap-1.5">
-                          <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="font-bold text-neutral-900">EasyPaisa / JazzCash / Mobile App</span>
-                        </div>
-                        <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-medium">Instant IBFT</span>
-                      </div>
-
-                      <div className="space-y-1.5 pt-1.5 border-t border-neutral-100 text-neutral-600 text-[11px] leading-relaxed">
-                        <p>
-                          <span className="font-semibold text-neutral-800">1.</span> Open EasyPaisa, JazzCash, SadaPay, Nayapay, or your banking app.
-                        </p>
-                        <p>
-                          <span className="font-semibold text-neutral-800">2.</span> Choose <span className="font-semibold text-neutral-800">Send Money → Bank Transfer</span>.
-                        </p>
-                        <p>
-                          <span className="font-semibold text-neutral-800">3.</span> Select <span className="font-semibold text-neutral-800">Meezan Bank</span> & paste the account or IBAN.
-                        </p>
-                        <p>
-                          <span className="font-semibold text-neutral-800">4.</span> Verify title is <span className="font-semibold text-neutral-900">Bellaro Official</span>, complete payment, and upload the receipt screenshot below.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-2 bg-emerald-50/70 rounded-lg border border-emerald-100 text-[11px] text-emerald-800 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>Verified merchant account. Instant dispatch upon approval.</span>
-                    </div>
-                  </div>
+                  <p className="text-[11px] text-neutral-500 flex items-center gap-1.5 pt-0.5">
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Pay via any banking app, EasyPaisa, or JazzCash (Select <strong>Meezan Bank</strong> &rarr; title <strong>Bellaro Official</strong>), then upload receipt screenshot below.</span>
+                  </p>
                 </div>
 
                 {/* Screenshot Upload Field */}

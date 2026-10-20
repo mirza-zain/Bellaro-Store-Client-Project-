@@ -65,14 +65,14 @@ export default async function Products({ limit, category }: Prop) {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6 mt-6">
         {finalProducts.map((item) => (
           <Link
             href={`/products/${item.id}`}
             key={item.id}
-            className="group flex flex-col gap-3"
+            className="group flex flex-col gap-2 sm:gap-3"
           >
-            <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
+            <div className="relative w-full aspect-square overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
               <Image
                 src={
                   item.image && !item.image.includes("/images/img1.jpg")
@@ -83,25 +83,25 @@ export default async function Products({ limit, category }: Prop) {
                 }
                 alt={item.name}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
               />
               {Number(item.stock) <= 0 && (
-                <div className="absolute top-3 left-3 bg-neutral-900/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-neutral-900/90 text-white text-[10px] sm:text-[11px] font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg backdrop-blur-xs">
                   Out of Stock
                 </div>
               )}
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-neutral-900 group-hover:text-neutral-600 transition truncate">
+              <h3 className="text-xs sm:text-base font-semibold text-neutral-900 group-hover:text-neutral-600 transition truncate">
                 {item.name}
               </h3>
-              <div className="flex gap-2 text-xs text-neutral-400 uppercase mt-0.5">
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400 uppercase mt-0.5 truncate">
                 <span>{item.category}</span>
                 <span>•</span>
                 <span>{item.subCategory}</span>
               </div>
-              <p className="font-semibold text-neutral-900 mt-1">
+              <p className="text-xs sm:text-sm md:text-base font-bold text-neutral-900 mt-1">
                 PKR {Number(item.price).toLocaleString()}
               </p>
             </div>
