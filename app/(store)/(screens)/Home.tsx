@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Truck, RotateCcw, Footprints, SprayCan, MapPin } from "lucide-react";
+import { Sparkles, Truck, RotateCcw, MapPin } from "lucide-react";
 import FeaturedItems from "./FeaturedItems";
 
 export default function HomePage() {
@@ -13,74 +13,58 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="w-full flex flex-col gap-6 sm:gap-10">
-      {/* 1. Mobile-First Clean Hero (Direct, Compact, Punchy) */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center bg-neutral-50/80 rounded-3xl p-5 sm:p-8 md:p-10 border border-neutral-200/70">
-          {/* Left Content */}
-          <div className="lg:col-span-7 flex flex-col items-start space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white rounded-full text-[11px] font-bold tracking-wider uppercase text-neutral-800 border border-neutral-200/80 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-black" />
-              <span>Bellaro PK • Step Into Style</span>
+    <div className="w-full flex flex-col gap-4 sm:gap-8">
+      {/* 1. Sleek Compact Campaign Hero (Ultra-Clean on Mobile) */}
+      <section className="relative w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 pt-1 sm:pt-4">
+        <div className="relative w-full h-[240px] sm:h-[320px] md:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-neutral-200/60">
+          <Image
+            src="/images/product1.jpg"
+            alt="Bellaro Handcrafted Footwear"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          {/* Subtle luxury gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+
+          {/* Minimal, direct overlay content */}
+          <div className="absolute inset-x-4 bottom-4 sm:inset-x-8 sm:bottom-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 text-white">
+            <div>
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-neutral-300">
+                Handcrafted in Karachi
+              </span>
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold uppercase tracking-tight leading-tight mt-0.5">
+                Footwear &amp; Signature Parfums
+              </h1>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight text-neutral-900 leading-[1.08]">
-              Handcrafted Luxury. <br />
-              <span className="text-neutral-400 font-light text-2xl sm:text-3xl lg:text-4xl">Footwear &amp; Parfums</span>
-            </h1>
-
-            <p className="text-neutral-600 text-xs sm:text-sm md:text-base max-w-lg leading-relaxed">
-              Italian-inspired horsebit loafers, casual driving moccasins, and designer cross-strap slides crafted for cloud comfort, alongside signature artisanal perfumes.
-            </p>
-
-            {/* Quick Actions */}
-            <div className="flex items-center gap-2.5 pt-1 w-full sm:w-auto">
+            <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/products?category=Footwear"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-6 py-3 bg-black text-white font-semibold text-xs sm:text-sm rounded-xl hover:bg-neutral-800 transition shadow-xs cursor-pointer"
+                className="px-4 py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-neutral-200 transition shadow-xs cursor-pointer"
               >
-                <Footprints className="w-4 h-4" />
-                <span>Shop Footwear</span>
-                <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
+                Shop Footwear
               </Link>
-
               <Link
                 href="/products?category=Perfumes"
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-6 py-3 bg-white text-neutral-900 font-semibold text-xs sm:text-sm rounded-xl border border-neutral-300 hover:bg-neutral-100 transition cursor-pointer"
+                className="px-4 py-2 bg-black/40 backdrop-blur-md text-white border border-white/30 text-xs font-bold rounded-lg hover:bg-white/20 transition cursor-pointer"
               >
-                <SprayCan className="w-4 h-4" />
-                <span>Shop Perfumes</span>
+                Shop Perfumes
               </Link>
-            </div>
-          </div>
-
-          {/* Right Hero Image (Single clean visual on desktop/tablet) */}
-          <div className="lg:col-span-5 relative w-full aspect-16/9 sm:aspect-16/10 lg:aspect-4/3 rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200/80 shadow-md">
-            <Image
-              src="/images/product1.jpg"
-              alt="Bellaro Handcrafted Footwear"
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 40vw"
-              className="object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute bottom-3 left-3 text-white">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-300 block">Karachi Craftsmanship</span>
-              <p className="text-xs sm:text-sm font-semibold">Pure Handcrafted Leather</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. Fast Category Filter Chips (Ideal for Mobile Browsing) */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+      {/* 2. Fast Category Filter Chips (One-Tap Navigation) */}
+      <section className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
           {quickCategories.map((c) => (
             <Link
               key={c.name}
               href={c.href}
-              className="shrink-0 px-4 py-2 rounded-xl bg-neutral-100 hover:bg-black hover:text-white border border-neutral-200/80 text-neutral-800 font-semibold transition-colors duration-200 flex items-center gap-2"
+              className="shrink-0 px-3.5 py-1.5 sm:py-2 rounded-xl bg-neutral-100 hover:bg-black hover:text-white border border-neutral-200/80 text-neutral-800 font-semibold transition-colors duration-200 flex items-center gap-1.5"
             >
               <span>{c.name}</span>
               <span className="text-[10px] opacity-60 font-normal">({c.count})</span>
@@ -89,26 +73,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Featured Shoes & Parfums Catalog (Front & Center) */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 3. Featured Shoes & Parfums Catalog (Immediately Visible on Mobile) */}
+      <section className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <FeaturedItems />
       </section>
 
       {/* 4. Compact Trust Strip */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-neutral-50 rounded-2xl p-4 border border-neutral-200/80 text-xs">
+      <section className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 pb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 bg-neutral-50 rounded-2xl p-3.5 sm:p-4 border border-neutral-200/80 text-xs">
           <div className="flex items-center gap-2 text-neutral-700">
             <Truck className="w-4 h-4 text-black shrink-0" />
             <div>
               <p className="font-bold text-neutral-900 leading-tight">Cash on Delivery</p>
-              <p className="text-[10px] text-neutral-500">Nationwide doorstep delivery</p>
+              <p className="text-[10px] text-neutral-500">Nationwide delivery</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-neutral-700">
             <Sparkles className="w-4 h-4 text-black shrink-0" />
             <div>
               <p className="font-bold text-neutral-900 leading-tight">Free Shipping</p>
-              <p className="text-[10px] text-neutral-500">On orders over PKR 8,000</p>
+              <p className="text-[10px] text-neutral-500">Over PKR 8,000</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-neutral-700">

@@ -76,7 +76,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav className="relative w-full py-4.5 flex justify-between items-center px-5 md:px-10 z-50 bg-white border-b border-neutral-100 shadow-xs">
+      <nav className="relative w-full py-3 md:py-4 flex justify-between items-center px-4 md:px-10 z-50 bg-white border-b border-neutral-100 shadow-xs">
         {/* Brand Logo */}
         <div className="md:mx-2">
           <Link href="/" className="group flex items-center gap-3">

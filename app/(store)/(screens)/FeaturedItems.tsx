@@ -4,21 +4,21 @@ import { Suspense } from "react";
 
 export default function FeaturedItems() {
   return (
-    <div className="w-full px-5 md:px-16 py-16 mt-10">
-      <div className="w-full flex items-center justify-between gap-4">
+    <div className="w-full py-4 sm:py-6">
+      <div className="w-full flex items-end justify-between gap-3 pb-2 border-b border-neutral-100">
         <div>
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-tight text-neutral-900">
-            Featured Shoes & Parfums
+          <h2 className="text-xl sm:text-3xl font-extrabold uppercase tracking-tight text-neutral-900 leading-tight">
+            Featured Collection
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-500 mt-1">
-            Handcrafted footwear and luxury fragrances engineered for everyday sophistication
+          <p className="text-[11px] sm:text-xs text-neutral-500 mt-0.5">
+            Handcrafted shoes &amp; artisanal perfumes
           </p>
         </div>
         <Link
           href="/products"
-          className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-black hover:text-neutral-600 underline underline-offset-4 cursor-pointer shrink-0"
+          className="text-xs font-bold uppercase tracking-wider text-black hover:text-neutral-600 underline underline-offset-4 cursor-pointer shrink-0 pb-0.5"
         >
-          View All
+          View All &rarr;
         </Link>
       </div>
       <Suspense fallback={
