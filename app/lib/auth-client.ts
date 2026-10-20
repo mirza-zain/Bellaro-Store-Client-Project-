@@ -7,8 +7,9 @@ export const authClient = createAuthClient({
     typeof window !== "undefined"
       ? window.location.origin
       : process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.BETTER_AUTH_URL ||
         (process.env.NODE_ENV === "production"
-          ? "https://bellaro.pk"
+          ? "https://bellaro-store.vercel.app"
           : "http://localhost:3000"),
 });
 

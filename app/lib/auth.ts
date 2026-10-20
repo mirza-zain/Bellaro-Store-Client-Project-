@@ -4,7 +4,10 @@ import { db } from "@/app/lib/db";
 import * as schema from "@/app/db/schema";
 import { nextCookies } from "better-auth/next-js";
 
-const productionUrl = "https://bellaro.pk";
+const productionUrl =
+  process.env.BETTER_AUTH_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "https://bellaro-store.vercel.app";
 const localUrl = "http://localhost:3000";
 
 export const auth = betterAuth({
@@ -40,10 +43,10 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://bellaro-store.vercel.app",
+    "https://*.vercel.app",
     "https://bellaro.pk",
     "https://*.bellaro.pk",
-    "https://bazzarmart.vercel.app",
-    "https://*.vercel.app",
     ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
     ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
   ],
