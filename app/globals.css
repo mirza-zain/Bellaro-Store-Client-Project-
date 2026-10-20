@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Scrolling animation used by the store marquee. */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll-left {
+  animation: scroll 20s linear infinite;
+}
+
+@font-face {
+    font-family: 'Gilam';
+    src: url('/fonts/GilamDemo-Black.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Popfine';
+    src: url('/fonts/popfine-italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Firlest';
+    src: url('/fonts/Firlest-Regular.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Batica';
+    src: url('/fonts/BaticaSans-Regular.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
