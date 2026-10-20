@@ -142,12 +142,13 @@ export default function AdminClientView({
     setStatsData(stats);
   }, [orders, products, stats]);
 
-  // Dynamic existing categories derived from current products
+  // Dynamic existing categories derived from current products (defaults to authentic Bellaro categories)
   const existingCategories = useMemo(() => {
-    const defaultSet = new Set<string>(["Clothing", "Jewelry", "Accessories"]);
+    const defaultSet = new Set<string>(["Footwear", "Perfumes", "Accessories"]);
     productsList.forEach((p) => {
-      if (p.category && p.category.trim()) {
-        defaultSet.add(p.category.trim());
+      const cat = p.category?.trim();
+      if (cat && cat !== "Clothing" && cat !== "Jewelry") {
+        defaultSet.add(cat);
       }
     });
     return Array.from(defaultSet).sort();
@@ -155,10 +156,10 @@ export default function AdminClientView({
 
   // Form state
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("Clothing");
+  const [category, setCategory] = useState("Footwear");
   const [isCreatingNewCategory, setIsCreatingNewCategory] = useState(false);
   const [customNewCategory, setCustomNewCategory] = useState("");
-  const [subCategory, setSubCategory] = useState("T-Shirt");
+  const [subCategory, setSubCategory] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [description, setDescription] = useState("");
@@ -216,7 +217,8 @@ export default function AdminClientView({
       if (res.success) {
         setIsModalOpen(false);
         setName("");
-        setCategory(existingCategories[0] || "Clothing");
+        setCategory(existingCategories.includes("Footwear") ? "Footwear" : existingCategories[0] || "Footwear");
+        setSubCategory("");
         setIsCreatingNewCategory(false);
         setCustomNewCategory("");
         setPrice("");
@@ -921,7 +923,11 @@ export default function AdminClientView({
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Heavyweight Acid Wash Boxy Tee"
+                  placeholder={
+                    category === "Perfumes"
+                      ? "e.g. Noir Oud Extrait de Parfum"
+                      : "e.g. Monarch Horsebit Loafers in Black Leather"
+                  }
                   className="w-full px-3.5 py-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-medium"
                 />
               </div>
@@ -940,7 +946,8 @@ export default function AdminClientView({
                         if (nextState) {
                           setCustomNewCategory("");
                         } else {
-                          setCategory(existingCategories[0] || "Clothing");
+                          setCategory(existingCategories.includes("Footwear") ? "Footwear" : existingCategories[0] || "Footwear");
+        setSubCategory("");
                         }
                       }}
                       className="text-[11px] font-semibold text-neutral-800 hover:text-black hover:underline cursor-pointer flex items-center gap-1"
@@ -966,7 +973,7 @@ export default function AdminClientView({
                           setCustomNewCategory(e.target.value);
                           setCategory(e.target.value);
                         }}
-                        placeholder="Type new category (e.g. Footwear, Hoodies)..."
+                        placeholder="Type new category (e.g. Footwear, Perfumes)..."
                         className="w-full px-3.5 py-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-medium"
                         autoFocus
                       />
@@ -1006,7 +1013,7 @@ export default function AdminClientView({
                     type="text"
                     value={subCategory}
                     onChange={(e) => setSubCategory(e.target.value)}
-                    placeholder="e.g. Graphic Tees"
+                    placeholder="e.g. Loafers, Moccasins, Slides, or EDP"
                     className="w-full px-3.5 py-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black"
                   />
                 </div>

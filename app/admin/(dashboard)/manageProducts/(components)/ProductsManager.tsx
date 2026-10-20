@@ -120,6 +120,12 @@ async function uploadToCloudinaryClient(file: File): Promise<string | null> {
   }
 }
 
+const subCategoryPresets: Record<string, string[]> = {
+  Footwear: ["Loafers", "Moccasins", "Slides", "Sandals", "Flip-Flops"],
+  Perfumes: ["Eau de Parfum (EDP)", "Extrait de Parfum", "Attar / Fragrance Oil"],
+  Accessories: ["Leather Care", "Shoe Horn", "Insoles"],
+};
+
 export default function ProductsManager({ initialProducts }: ProductsManagerProps) {
   const router = useRouter();
   const [productsList, setProductsList] = useState<Product[]>(initialProducts);
@@ -129,12 +135,13 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [isPending, startTransition] = useTransition();
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
-  // Dynamic existing categories derived from current products
+  // Dynamic existing categories derived from current products (defaults to authentic Bellaro categories)
   const existingCategories = useMemo(() => {
-    const defaultSet = new Set<string>(["Clothing", "Jewelry", "Accessories"]);
+    const defaultSet = new Set<string>(["Footwear", "Perfumes", "Accessories"]);
     productsList.forEach((p) => {
-      if (p.category && p.category.trim()) {
-        defaultSet.add(p.category.trim());
+      const cat = p.category?.trim();
+      if (cat && cat !== "Clothing" && cat !== "Jewelry") {
+        defaultSet.add(cat);
       }
     });
     return Array.from(defaultSet).sort();
@@ -146,7 +153,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
 
   // Form states for Add / Edit
   const [formName, setFormName] = useState("");
-  const [formCategory, setFormCategory] = useState("Clothing");
+  const [formCategory, setFormCategory] = useState("Footwear");
   const [isCreatingNewCategory, setIsCreatingNewCategory] = useState(false);
   const [customNewCategory, setCustomNewCategory] = useState("");
   const [formSubCategory, setFormSubCategory] = useState("");
@@ -179,7 +186,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setEditingProduct(null);
     setFormName("");
     setFormDescription("");
-    setFormCategory(existingCategories[0] || "Clothing");
+    setFormCategory("Footwear");
     setIsCreatingNewCategory(false);
     setCustomNewCategory("");
     setFormSubCategory("");
@@ -196,7 +203,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setEditingProduct(product);
     setFormName(product.name);
     setFormDescription(product.description || "");
-    setFormCategory(product.category);
+    setFormCategory(product.category || "Footwear");
     setIsCreatingNewCategory(false);
     setCustomNewCategory("");
     setFormSubCategory(product.subCategory === "General" ? "" : (product.subCategory || ""));
@@ -224,10 +231,23 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     ]);
   };
 
-  const handleQuickAddSizes = () => {
+  const handleQuickAddShoeSizes = () => {
     const defaultPrice = Number(formPrice) || 0;
     const defaultStock = Number(formStock) || 10;
-    const sizes = ["S", "M", "L", "XL"];
+    const sizes = ["39", "40", "41", "42", "43", "44", "45"];
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = sizes
+        .filter((s) => !existingLabels.has(s))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
+  };
+
+  const handleQuickAddPerfumeSizes = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    const sizes = ["50ml", "100ml"];
     setFormVariants((prev) => {
       const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
       const toAdd = sizes
@@ -924,7 +944,11 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                   required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. Oversized Heavyweight Acid Wash Tee"
+                  placeholder={
+                    formCategory === "Perfumes"
+                      ? "e.g. Noir Oud Extrait de Parfum"
+                      : "e.g. Monarch Horsebit Loafers in Black Leather"
+                  }
                   className="w-full px-3.5 py-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black font-medium"
                 />
               </div>
@@ -938,7 +962,11 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                   rows={3}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Describe materials, fit, care instructions..."
+                  placeholder={
+                    formCategory === "Perfumes"
+                      ? "Describe top notes, heart notes, base notes, longevity, bottle volume (e.g. 50ml / 100ml)..."
+                      : "Describe premium leather grade, insole cushioning, sole material, sizing fit..."
+                  }
                   className="w-full px-3.5 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black"
                 />
               </div>
@@ -958,7 +986,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                         if (nextState) {
                           setCustomNewCategory("");
                         } else {
-                          setFormCategory(existingCategories[0] || "Clothing");
+                          setFormCategory(existingCategories.includes("Footwear") ? "Footwear" : existingCategories[0] || "Footwear");
                         }
                       }}
                       className="text-[11px] font-semibold text-neutral-800 hover:text-black hover:underline cursor-pointer flex items-center gap-1"
@@ -984,7 +1012,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                           setCustomNewCategory(e.target.value);
                           setFormCategory(e.target.value);
                         }}
-                        placeholder="Type new category..."
+                        placeholder="Type new category (e.g. Footwear, Perfumes)..."
                         className="w-full px-3.5 py-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black font-medium"
                         autoFocus
                       />
@@ -1024,9 +1052,32 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                     type="text"
                     value={formSubCategory}
                     onChange={(e) => setFormSubCategory(e.target.value)}
-                    placeholder="e.g. Graphic Tees, Chains (optional)"
+                    placeholder={
+                      formCategory === "Perfumes"
+                        ? "e.g. Eau de Parfum (EDP), Extrait"
+                        : "e.g. Loafers, Moccasins, Slides, Sandals"
+                    }
                     className="w-full px-3.5 py-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black"
                   />
+                  {subCategoryPresets[formCategory] && (
+                    <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                      <span className="text-[10px] text-neutral-400">Presets:</span>
+                      {subCategoryPresets[formCategory].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setFormSubCategory(preset)}
+                          className={`px-2 py-0.5 text-[10px] font-medium rounded-md border transition cursor-pointer ${
+                            formSubCategory === preset
+                              ? "bg-black text-white border-black font-semibold"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-100"
+                          }`}
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1110,17 +1161,24 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                       <span className="text-[11px] font-semibold text-neutral-500 shrink-0">Presets:</span>
                       <button
                         type="button"
-                        onClick={handleQuickAddSizes}
+                        onClick={handleQuickAddShoeSizes}
                         className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
                       >
-                        + S, M, L, XL
+                        + EUR 39–45 (Shoes)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleQuickAddPerfumeSizes}
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
+                      >
+                        + 50ml, 100ml (Perfumes)
                       </button>
                       <button
                         type="button"
                         onClick={() => handleAddVariant("One Size", formPrice, "25")}
                         className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
                       >
-                        + Free / One Size
+                        + One Size
                       </button>
                       <button
                         type="button"
