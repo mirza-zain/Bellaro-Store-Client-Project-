@@ -33,6 +33,7 @@ import { useCart } from "@/app/context/CartContext";
 import { ShippingRule } from "@/app/db/schema";
 import { getShippingRulesAction } from "@/app/lib/actions/shipping";
 import { computeShippingFee } from "@/app/lib/shippingUtils";
+import { BANK_DETAILS } from "@/app/lib/bank-details";
 
 const COUNTRY_CODES = [
   { code: "+92", country: "PK", flag: "🇵🇰", label: "Pakistan (+92)" },
@@ -1009,63 +1010,83 @@ export default function CheckoutPage() {
                   <p className="text-xs text-neutral-500 mt-1">
                     Please transfer the exact total amount (
                     <span className="font-bold text-neutral-900">PKR {grandTotal.toLocaleString()}</span>
-                    ) to any of the following accounts:
+                    ) to the following Meezan Bank account:
                   </p>
                 </div>
 
-                <div className="p-3.5 sm:p-4 bg-white rounded-xl border border-neutral-200 space-y-3 text-xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="font-bold text-neutral-900 text-sm">Meezan Bank</span>
-                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-semibold">Title: Bellaro Official</span>
+                <div className="p-4 sm:p-5 bg-white rounded-2xl border border-neutral-200 space-y-4 text-xs shadow-xs">
+                  {/* Bank Header with Meezan Bank Logo & Title */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-neutral-100">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-11 w-36 sm:w-40 shrink-0 bg-white rounded-xl p-1.5 border border-neutral-200/90 shadow-2xs flex items-center justify-center">
+                        <Image
+                          src={BANK_DETAILS.logo}
+                          alt="Meezan Bank Logo"
+                          fill
+                          className="object-contain p-1"
+                          priority
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-neutral-900 text-sm sm:text-base">{BANK_DETAILS.bankName}</span>
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-md text-[10px] font-bold uppercase tracking-wider border border-emerald-200/50">
+                            Verified
+                          </span>
+                        </div>
+                        <p className="text-xs text-neutral-500 mt-0.5">
+                          Account Title: <strong className="text-neutral-900 font-bold">{BANK_DETAILS.accountTitle}</strong>
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-[10px] text-neutral-400 hidden sm:inline">Zamzama DHA Phase 5, Karachi</span>
+                    <span className="text-[11px] text-neutral-400 font-medium">Meezan Bank Limited, Pakistan</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="flex items-center justify-between p-2.5 bg-neutral-50 rounded-lg border border-neutral-200/80">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Account Number */}
+                    <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl border border-neutral-200/80">
                       <div>
                         <span className="text-[10px] text-neutral-500 uppercase tracking-wider block font-semibold">Account Number</span>
-                        <span className="text-neutral-900 font-mono font-bold text-xs select-all">0101-0105-001234-01-0</span>
+                        <span className="text-neutral-900 font-mono font-bold text-sm select-all">{BANK_DETAILS.accountNumber}</span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopyBankField("01010105001234010", "acc")}
-                        className="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition flex items-center gap-1 shrink-0 cursor-pointer"
+                        onClick={() => handleCopyBankField(BANK_DETAILS.accountNumber, "acc")}
+                        className="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs active:scale-95"
                       >
                         {copiedBankField === "acc" ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span className="text-emerald-700">Copied</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-700 font-bold">Copied</span>
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3 h-3 text-neutral-500" />
+                            <Copy className="w-3.5 h-3.5 text-neutral-500" />
                             <span>Copy</span>
                           </>
                         )}
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between p-2.5 bg-neutral-50 rounded-lg border border-neutral-200/80">
+                    {/* IBAN */}
+                    <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl border border-neutral-200/80">
                       <div>
                         <span className="text-[10px] text-neutral-500 uppercase tracking-wider block font-semibold">IBAN (Universal)</span>
-                        <span className="text-neutral-900 font-mono text-xs select-all">PK00MEZN0000001234567890</span>
+                        <span className="text-neutral-900 font-mono font-bold text-xs select-all break-all">{BANK_DETAILS.iban}</span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopyBankField("PK00MEZN0000001234567890", "iban")}
-                        className="px-2.5 py-1 text-[11px] font-semibold rounded-md bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition flex items-center gap-1 shrink-0 cursor-pointer"
+                        onClick={() => handleCopyBankField(BANK_DETAILS.iban, "iban")}
+                        className="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-700 transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs active:scale-95"
                       >
                         {copiedBankField === "iban" ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span className="text-emerald-700">Copied</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-700 font-bold">Copied</span>
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3 h-3 text-neutral-500" />
+                            <Copy className="w-3.5 h-3.5 text-neutral-500" />
                             <span>Copy</span>
                           </>
                         )}
@@ -1073,9 +1094,9 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <p className="text-[11px] text-neutral-500 flex items-center gap-1.5 pt-0.5">
-                    <Smartphone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Pay via any banking app, EasyPaisa, or JazzCash (Select <strong>Meezan Bank</strong> &rarr; title <strong>Bellaro Official</strong>), then upload receipt screenshot below.</span>
+                  <p className="text-[11px] text-neutral-600 flex items-center gap-2 pt-1 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/60">
+                    <Smartphone className="w-4 h-4 text-amber-700 shrink-0" />
+                    <span>Pay via any banking app, Raast, EasyPaisa, or JazzCash (Select <strong>Meezan Bank</strong> &rarr; Title: <strong>{BANK_DETAILS.accountTitle}</strong>), then upload receipt screenshot below.</span>
                   </p>
                 </div>
 
