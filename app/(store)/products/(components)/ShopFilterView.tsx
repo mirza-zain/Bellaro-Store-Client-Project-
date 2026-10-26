@@ -694,13 +694,13 @@ export default function ShopFilterView({
                     }`}
                   >
                     {/* Thumbnail Image Container */}
-                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-neutral-50 border border-neutral-200/60 shadow-xs flex items-center justify-center">
+                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
                       <Image
                         src={item.image || "/images/img1.jpg"}
                         alt={item.name}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                       />
 
                       {/* Stock Badge */}

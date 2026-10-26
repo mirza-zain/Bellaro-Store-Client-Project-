@@ -26,12 +26,24 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
   return (
     <div className="w-full space-y-4">
       {/* Main Image Viewport */}
-      <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-neutral-50/60 border border-neutral-200/80 shadow-xs group flex items-center justify-center">
+      <div className="relative aspect-square md:aspect-[4/5] w-full rounded-3xl overflow-hidden bg-neutral-100 border border-neutral-200/80 shadow-xs group flex items-center justify-center">
+        {/* Ambient blurred backdrop that matches image colors to prevent letterbox bars */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <Image
+            src={currentImage}
+            alt=""
+            fill
+            className="object-cover scale-125 blur-2xl opacity-35 brightness-95"
+            priority
+          />
+        </div>
+
+        {/* Foreground full product image: zero cropping, crisp details */}
         <Image
           src={currentImage}
           alt={`${name} - View ${selectedIndex + 1}`}
           fill
-          className="object-contain p-2 sm:p-3 transition duration-300"
+          className="object-contain p-2 sm:p-4 z-10 transition duration-300 drop-shadow-xs"
           priority
         />
 
@@ -75,7 +87,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
                 key={index}
                 type="button"
                 onClick={() => setSelectedIndex(index)}
-                className={`relative w-20 h-20 rounded-2xl overflow-hidden bg-neutral-50 transition cursor-pointer border-2 flex items-center justify-center ${
+                className={`relative w-20 h-20 rounded-2xl overflow-hidden bg-neutral-100 transition cursor-pointer border-2 ${
                   isActive
                     ? "border-black ring-2 ring-black/20 scale-102"
                     : "border-neutral-200 hover:border-neutral-400 opacity-70 hover:opacity-100"
@@ -85,7 +97,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
                   src={imgUrl}
                   alt={`${name} thumbnail ${index + 1}`}
                   fill
-                  className="object-contain p-1"
+                  className="object-cover object-center"
                 />
               </button>
             );
