@@ -131,7 +131,13 @@ export default async function ProductsCatalogPage({ searchParams }: Props) {
   const activeSearch = resolvedParams?.search || "";
 
   const dbProducts = await getStoreProducts();
-  const allProducts = dbProducts && dbProducts.length > 0 ? dbProducts : curatedBellaroCatalog;
+  const allProducts =
+    dbProducts && dbProducts.length > 0
+      ? dbProducts
+      : curatedBellaroCatalog.map((p) => ({
+          ...p,
+          images: [p.image],
+        }));
 
   return (
     <div className="w-full max-w-7xl mx-auto px-5 md:px-12 py-10">

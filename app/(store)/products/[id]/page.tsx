@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, Check, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { getProductById } from "@/app/lib/actions/store";
 import ProductPurchaseActions from "./(components)/ProductPurchaseActions";
+import ProductImageGallery from "./(components)/ProductImageGallery";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -238,16 +239,17 @@ export default async function ProductDetailPage({ params }: Props) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
-        {/* Product Image Gallery */}
-        <div className="relative aspect-square w-full rounded-3xl overflow-hidden bg-neutral-100 border border-neutral-200/80 shadow-xs">
-          <Image
-            src={product.image || "/images/img1.jpg"}
-            alt={product.name}
-            fill
-            className="object-cover object-top"
-            priority
-          />
-        </div>
+        {/* Product Image Gallery (Supports up to 3 pictures) */}
+        <ProductImageGallery
+          images={
+            Array.isArray((product as any).images) && (product as any).images.length > 0
+              ? (product as any).images
+              : product.image
+              ? [product.image]
+              : ["/images/img1.jpg"]
+          }
+          name={product.name}
+        />
 
         {/* Product Info & Purchase Form */}
         <div className="flex flex-col gap-6">

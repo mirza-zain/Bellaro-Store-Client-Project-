@@ -189,9 +189,8 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [formColors, setFormColors] = useState<string[]>([]);
   const [customColorInput, setCustomColorInput] = useState("");
   const [customVariantInput, setCustomVariantInput] = useState("");
-  const [formImage, setFormImage] = useState("");
-  const [formImagePreview, setFormImagePreview] = useState<string | null>(null);
-  const [formSelectedFile, setFormSelectedFile] = useState<File | null>(null);
+  const [formImages, setFormImages] = useState<{ id: string; url: string; file?: File }[]>([]);
+  const [directUrlInput, setDirectUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
   // Derived category & variant calculations
@@ -285,9 +284,8 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setFormColors(["Black", "Dark Brown"]);
     setCustomColorInput("");
     setCustomVariantInput("");
-    setFormImage("");
-    setFormImagePreview(null);
-    setFormSelectedFile(null);
+    setFormImages([]);
+    setDirectUrlInput("");
     setIsAddModalOpen(true);
   };
 
@@ -307,9 +305,11 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setFormColors(existingColors);
     setCustomColorInput("");
     setCustomVariantInput("");
-    setFormImage(product.image || "");
-    setFormImagePreview(product.image || null);
-    setFormSelectedFile(null);
+    const existingImages: string[] = Array.isArray((product as any).images) && (product as any).images.length > 0
+      ? (product as any).images
+      : (product.image ? [product.image] : []);
+    setFormImages(existingImages.slice(0, 3).map((url, idx) => ({ id: `existing-${idx}-${Date.now()}`, url })));
+    setDirectUrlInput("");
     setIsAddModalOpen(true);
   };
 
@@ -483,14 +483,55 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setFormVariants([]);
   };
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormSelectedFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setFormImagePreview(previewUrl);
-      setFormImage("");
+  const handleImageFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const remaining = 3 - formImages.length;
+    if (remaining <= 0) {
+      showToast("Maximum 3 pictures allowed per product.", "error");
+      e.target.value = "";
+      return;
     }
+
+    const acceptedFiles = files.slice(0, remaining);
+    if (files.length > remaining) {
+      showToast(`Only ${remaining} more picture(s) allowed (maximum 3 total).`, "error");
+    }
+
+    const newEntries = acceptedFiles.map((file, idx) => ({
+      id: `file-${Date.now()}-${idx}-${Math.random()}`,
+      url: URL.createObjectURL(file),
+      file,
+    }));
+
+    setFormImages((prev) => [...prev, ...newEntries].slice(0, 3));
+    e.target.value = "";
+  };
+
+  const handleAddDirectUrl = () => {
+    const trimmed = directUrlInput.trim();
+    if (!trimmed) return;
+    if (formImages.length >= 3) {
+      showToast("Maximum 3 pictures allowed per product.", "error");
+      return;
+    }
+    setFormImages((prev) => [...prev, { id: `url-${Date.now()}-${Math.random()}`, url: trimmed }].slice(0, 3));
+    setDirectUrlInput("");
+  };
+
+  const handleRemoveImage = (idToRemove: string) => {
+    setFormImages((prev) => prev.filter((img) => img.id !== idToRemove));
+  };
+
+  const handleSetPrimaryImage = (index: number) => {
+    if (index === 0) return;
+    setFormImages((prev) => {
+      const copy = [...prev];
+      const [selected] = copy.splice(index, 1);
+      copy.unshift(selected);
+      return copy;
+    });
   };
 
   const handleSubmitForm = async (e: React.FormEvent) => {
@@ -533,19 +574,29 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     }
 
     setIsUploading(true);
-    let finalImageUrl = formImage.trim();
+    const finalImageUrls: string[] = [];
+    const fallbackFiles: File[] = [];
 
-    // Direct Cloudinary upload from client to eliminate server payload limits
-    if (formSelectedFile) {
-      try {
-        const uploadedUrl = await uploadToCloudinaryClient(formSelectedFile);
-        if (uploadedUrl) {
-          finalImageUrl = uploadedUrl;
+    // Direct Cloudinary upload from client for each pending file (max 3 pictures)
+    for (const entry of formImages) {
+      if (entry.file) {
+        try {
+          const uploadedUrl = await uploadToCloudinaryClient(entry.file);
+          if (uploadedUrl) {
+            finalImageUrls.push(uploadedUrl);
+          } else {
+            fallbackFiles.push(entry.file);
+          }
+        } catch (err) {
+          console.warn("Direct upload error, queuing for server upload:", err);
+          fallbackFiles.push(entry.file);
         }
-      } catch (err) {
-        console.warn("Direct upload error, falling back to server:", err);
+      } else if (entry.url && !entry.url.startsWith("blob:")) {
+        finalImageUrls.push(entry.url);
       }
     }
+
+    const primaryImageUrl = finalImageUrls[0] || "";
 
     const formData = new FormData();
     formData.append("name", formName.trim());
@@ -556,12 +607,13 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     formData.append("stock", finalStock);
     formData.append("colors", JSON.stringify(formColors));
     formData.append("variants", JSON.stringify(hasVariants ? formVariants : []));
-    formData.append("image", finalImageUrl);
+    formData.append("images", JSON.stringify(finalImageUrls.slice(0, 3)));
+    formData.append("image", primaryImageUrl);
 
-    // If direct upload failed to produce URL and we still have a file, send the single file
-    if (!finalImageUrl && formSelectedFile) {
-      formData.append("imageFile", formSelectedFile);
-    }
+    // If any file couldn't be uploaded directly on client, send to server
+    fallbackFiles.slice(0, 3 - finalImageUrls.length).forEach((f) => {
+      formData.append("imageFiles", f);
+    });
 
     startTransition(async () => {
       try {
@@ -578,7 +630,8 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                     subCategory: formSubCategory.trim() || "General",
                     price: finalPrice,
                     stock: finalStock,
-                    image: finalImageUrl || p.image,
+                    image: primaryImageUrl || p.image,
+                    images: finalImageUrls.length > 0 ? finalImageUrls : (p as any).images,
                     colors: formColors,
                     variants: hasVariants ? formVariants : [],
                   }
@@ -1739,71 +1792,156 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                 </div>
               </div>
 
-              {/* 6. Product Image Section */}
-              <div>
-                <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-                  Product Image
-                </label>
-
-                {formImagePreview ? (
-                  <div className="relative mb-2.5 flex items-center gap-3 p-3 bg-neutral-50 rounded-2xl border border-neutral-200">
-                    <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-white shrink-0 border border-neutral-200">
-                      <Image
-                        src={formImagePreview}
-                        alt="Preview"
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 text-xs">
-                      <p className="font-semibold text-neutral-900 truncate">
-                        {formSelectedFile ? formSelectedFile.name : "Product Image Selected"}
-                      </p>
-                      <p className="text-[11px] text-emerald-600 font-medium mt-0.5">
-                        {formSelectedFile ? "Ready to upload" : "Current image"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormSelectedFile(null);
-                        setFormImagePreview(null);
-                        setFormImage("");
-                      }}
-                      className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200 rounded-lg transition"
-                      title="Remove image"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+              {/* 6. Product Images Section (Max 3 Pictures) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase text-neutral-700">
+                      Product Pictures (Max 3 Allowed)
+                    </label>
+                    <p className="text-[11px] text-neutral-400">
+                      Upload up to 3 angles (Cover, side angle, detail). 1st picture is the catalog cover.
+                    </p>
                   </div>
-                ) : null}
+                  <span
+                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                      formImages.length === 3 ? "bg-amber-100 text-amber-800" : "bg-neutral-100 text-neutral-700"
+                    }`}
+                  >
+                    {formImages.length} / 3 Uploaded
+                  </span>
+                </div>
 
-                <div className="flex gap-2">
-                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-neutral-800 bg-neutral-100 hover:bg-neutral-200 rounded-2xl cursor-pointer transition border border-dashed border-neutral-300">
-                    <Upload className="w-4 h-4 text-neutral-600" />
-                    <span>Upload Image from Device</span>
+                {/* 3 Picture Slots Grid */}
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                  {[0, 1, 2].map((slotIdx) => {
+                    const img = formImages[slotIdx];
+                    const isPrimary = slotIdx === 0;
+
+                    if (img) {
+                      return (
+                        <div
+                          key={img.id}
+                          className={`relative aspect-square rounded-2xl overflow-hidden border-2 bg-neutral-50 flex flex-col items-center justify-center group ${
+                            isPrimary ? "border-black shadow-xs ring-2 ring-black/10" : "border-neutral-200"
+                          }`}
+                        >
+                          <Image
+                            src={img.url}
+                            alt={`Product preview ${slotIdx + 1}`}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                          {/* Slot Label Badge */}
+                          <div className="absolute top-1.5 left-1.5 z-10">
+                            <span
+                              className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md shadow-xs ${
+                                isPrimary
+                                  ? "bg-black text-white"
+                                  : "bg-white/90 backdrop-blur-xs text-neutral-700 border border-neutral-200"
+                              }`}
+                            >
+                              {isPrimary ? "Cover" : `Pic ${slotIdx + 1}`}
+                            </span>
+                          </div>
+
+                          {/* Hover Actions: Remove & Set Cover */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-between p-2 z-10">
+                            <div className="w-full flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(img.id)}
+                                className="p-1 bg-white/90 hover:bg-white text-rose-600 rounded-lg shadow-xs transition cursor-pointer"
+                                title="Remove this picture"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            {!isPrimary && (
+                              <button
+                                type="button"
+                                onClick={() => handleSetPrimaryImage(slotIdx)}
+                                className="w-full py-1 text-[10px] font-bold bg-white text-black hover:bg-neutral-100 rounded-lg shadow-xs transition cursor-pointer text-center"
+                              >
+                                Make Cover
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Empty Slot
+                    return (
+                      <label
+                        key={`empty-${slotIdx}`}
+                        className="relative aspect-square rounded-2xl border-2 border-dashed border-neutral-300 hover:border-black bg-neutral-50/60 hover:bg-neutral-100/60 flex flex-col items-center justify-center p-2 text-center cursor-pointer transition group"
+                      >
+                        <div className="p-2 bg-white rounded-full border border-neutral-200 shadow-2xs group-hover:scale-105 transition mb-1 text-neutral-400 group-hover:text-black">
+                          <Upload className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] font-bold text-neutral-600 group-hover:text-black">
+                          {slotIdx === 0 ? "+ Cover Photo" : `+ Picture ${slotIdx + 1}`}
+                        </span>
+                        <span className="text-[9px] text-neutral-400">Click to add</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple={formImages.length < 2}
+                          onChange={handleImageFilesChange}
+                          className="hidden"
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+
+                {/* Direct Image URL input & Batch Upload Button */}
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <label
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl border border-neutral-200 transition ${
+                      formImages.length >= 3
+                        ? "bg-neutral-100 text-neutral-400 cursor-not-allowed border-dashed"
+                        : "bg-white hover:bg-neutral-50 text-neutral-800 cursor-pointer shadow-2xs"
+                    }`}
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{formImages.length >= 3 ? "Max 3 Pictures Reached" : "Select Device Pictures (Max 3)"}</span>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleImageFileChange}
+                      multiple
+                      disabled={formImages.length >= 3}
+                      onChange={handleImageFilesChange}
                       className="hidden"
                     />
                   </label>
-                </div>
 
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    value={formImage.startsWith("data:") ? "" : formImage}
-                    onChange={(e) => {
-                      setFormImage(e.target.value);
-                      setFormImagePreview(e.target.value);
-                      setFormSelectedFile(null);
-                    }}
-                    placeholder="Or enter direct image URL"
-                    className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black"
-                  />
+                  <div className="flex gap-1.5 flex-1">
+                    <input
+                      type="text"
+                      value={directUrlInput}
+                      disabled={formImages.length >= 3}
+                      onChange={(e) => setDirectUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddDirectUrl();
+                        }
+                      }}
+                      placeholder={formImages.length >= 3 ? "Max 3 pictures reached" : "Or enter direct image URL..."}
+                      className="flex-1 px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black disabled:bg-neutral-100 disabled:text-neutral-400"
+                    />
+                    <button
+                      type="button"
+                      disabled={formImages.length >= 3 || !directUrlInput.trim()}
+                      onClick={handleAddDirectUrl}
+                      className="px-3 py-2 text-xs font-semibold bg-neutral-900 text-white rounded-xl hover:bg-black disabled:bg-neutral-200 disabled:text-neutral-400 transition cursor-pointer shrink-0"
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </div>
               </div>
 

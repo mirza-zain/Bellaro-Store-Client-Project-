@@ -92,8 +92,8 @@ export default function AdminClientView({
     "44",
   ]);
   const [customColorInput, setCustomColorInput] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const handleAddCustomColor = () => {
     const val = customColorInput.trim();
@@ -257,10 +257,9 @@ export default function AdminClientView({
     formData.append("colors", JSON.stringify(category === "Perfumes" ? [] : selectedColors));
 
     formData.append("description", description.trim() || `${name} - handcrafted quality`);
-    if (selectedFile) {
-      formData.append("file", selectedFile);
-      formData.append("imageFile", selectedFile);
-    }
+    selectedFiles.forEach((file) => {
+      formData.append("imageFiles", file);
+    });
 
     startTransition(async () => {
       const res = await addProductAction(formData);
@@ -269,8 +268,8 @@ export default function AdminClientView({
         setName("");
         setPrice("");
         setDescription("");
-        setSelectedFile(null);
-        setImagePreview(null);
+        setSelectedFiles([]);
+        setImagePreviews([]);
         showToast("Product added to catalog!");
         refreshDashboard();
         router.refresh();
@@ -278,6 +277,37 @@ export default function AdminClientView({
         showToast(res.error || "Failed to create product.", "error");
       }
     });
+  };
+
+  const handleSelectFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const remaining = 3 - selectedFiles.length;
+    if (remaining <= 0) {
+      showToast("Maximum 3 pictures allowed per product.", "error");
+      e.target.value = "";
+      return;
+    }
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) {
+      showToast(`Only ${remaining} more picture(s) allowed (maximum 3 total).`, "error");
+    }
+    const newFiles = [...selectedFiles, ...toAdd].slice(0, 3);
+    setSelectedFiles(newFiles);
+
+    toAdd.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreviews((prev) => [...prev, reader.result as string].slice(0, 3));
+      };
+      reader.readAsDataURL(f);
+    });
+    e.target.value = "";
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const lowStockItems = productsList.filter((p) => Number(p.stock) <= 5);
@@ -1001,28 +1031,69 @@ export default function AdminClientView({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-                  Product Image
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) {
-                      setSelectedFile(f);
-                      const reader = new FileReader();
-                      reader.onload = () => setImagePreview(reader.result as string);
-                      reader.readAsDataURL(f);
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold uppercase text-neutral-700">
+                    Product Pictures (Max 3 Allowed)
+                  </label>
+                  <span className="text-[11px] text-neutral-400 font-medium">
+                    {selectedFiles.length} / 3 pictures
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[0, 1, 2].map((idx) => {
+                    const preview = imagePreviews[idx];
+                    const isCover = idx === 0;
+
+                    if (preview) {
+                      return (
+                        <div
+                          key={idx}
+                          className={`relative aspect-square rounded-2xl overflow-hidden border-2 bg-neutral-100 group ${
+                            isCover ? "border-black shadow-xs ring-2 ring-black/10" : "border-neutral-200"
+                          }`}
+                        >
+                          <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                          <span
+                            className={`absolute top-1 left-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shadow-xs ${
+                              isCover ? "bg-black text-white" : "bg-white/90 text-neutral-700"
+                            }`}
+                          >
+                            {isCover ? "Cover" : `Pic ${idx + 1}`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(idx)}
+                            className="absolute top-1 right-1 p-1 bg-white/90 hover:bg-white text-rose-600 rounded-md shadow-xs opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                            title="Remove picture"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
                     }
-                  }}
-                  className="w-full px-3.5 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs focus:outline-hidden"
-                />
-                {imagePreview && (
-                  <div className="mt-2 w-16 h-16 rounded-xl overflow-hidden border border-neutral-200">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  </div>
-                )}
+
+                    return (
+                      <label
+                        key={idx}
+                        className="relative aspect-square rounded-2xl border-2 border-dashed border-neutral-300 hover:border-black bg-neutral-50 hover:bg-neutral-100 flex flex-col items-center justify-center p-2 text-center cursor-pointer transition"
+                      >
+                        <Upload className="w-4 h-4 text-neutral-400 mb-1" />
+                        <span className="text-[10px] font-bold text-neutral-600">
+                          {idx === 0 ? "+ Cover" : `+ Pic ${idx + 1}`}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={selectedFiles.length >= 3}
+                          onChange={handleSelectFiles}
+                          className="hidden"
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">

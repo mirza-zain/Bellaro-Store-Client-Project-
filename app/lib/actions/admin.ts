@@ -29,9 +29,14 @@ export async function ensureTablesExist() {
         price NUMERIC NOT NULL,
         stock NUMERIC NOT NULL,
         image TEXT,
+        images JSONB NOT NULL DEFAULT '[]'::jsonb,
         colors JSONB NOT NULL DEFAULT '[]'::jsonb,
         variants JSONB NOT NULL DEFAULT '[]'::jsonb
       );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB NOT NULL DEFAULT '[]'::jsonb;
     `);
 
     await db.execute(sql`
@@ -497,22 +502,59 @@ export async function addProductAction(formData: FormData) {
       stock = totalStock.toString();
     }
     
-    // Cloudinary image upload handling
-    const imageInput = (formData.get("image") as string) || "";
-    let finalImageUrl = imageInput.trim();
-
-    const imageFile = formData.get("imageFile") as File | null;
-    if (imageFile && typeof imageFile !== "string" && imageFile.size > 0) {
-      const uploadRes = await uploadFileAction(formData);
-      if (uploadRes.success && uploadRes.url) {
-        finalImageUrl = uploadRes.url;
-      }
-    } else if (imageInput && imageInput.startsWith("data:image/")) {
-      const uploadRes = await uploadToCloudinary(imageInput, "bazzario/products");
-      if (uploadRes.success && uploadRes.url) {
-        finalImageUrl = uploadRes.url;
+    // Image(s) handling - up to 3 pictures allowed
+    let parsedImages: string[] = [];
+    const imagesRaw = formData.get("images") as string | null;
+    if (imagesRaw) {
+      try {
+        const arr = JSON.parse(imagesRaw);
+        if (Array.isArray(arr)) {
+          parsedImages = arr.map((u: any) => String(u).trim()).filter(Boolean);
+        }
+      } catch (e) {
+        console.warn("Failed to parse images JSON:", e);
       }
     }
+
+    const legacyImageInput = (formData.get("image") as string) || "";
+    if (legacyImageInput.trim() && !parsedImages.includes(legacyImageInput.trim())) {
+      parsedImages.push(legacyImageInput.trim());
+    }
+
+    // Process file uploads if any provided in formData
+    const rawFiles = [
+      ...formData.getAll("imageFiles"),
+      ...formData.getAll("files"),
+      formData.get("imageFile"),
+      formData.get("file"),
+    ].filter(Boolean) as (File | string)[];
+
+    for (const f of rawFiles) {
+      if (parsedImages.length >= 3) break;
+      if (typeof f !== "string" && f.size > 0) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", f);
+        uploadFormData.append("folder", "bazzario/products");
+        const uploadRes = await uploadFileAction(uploadFormData);
+        if (uploadRes.success && uploadRes.url) {
+          parsedImages.push(uploadRes.url);
+        }
+      }
+    }
+
+    // Convert any direct base64 strings to Cloudinary URLs
+    for (let i = 0; i < parsedImages.length; i++) {
+      if (parsedImages[i].startsWith("data:image/")) {
+        const uploadRes = await uploadToCloudinary(parsedImages[i], "bazzario/products");
+        if (uploadRes.success && uploadRes.url) {
+          parsedImages[i] = uploadRes.url;
+        }
+      }
+    }
+
+    // Strictly enforce maximum 3 pictures
+    parsedImages = parsedImages.slice(0, 3);
+    const finalImageUrl = parsedImages[0] || legacyImageInput.trim();
 
     if (!name || !price || !category) {
       return { success: false, error: "Name, price, and category are required." };
@@ -526,6 +568,7 @@ export async function addProductAction(formData: FormData) {
       price: price.toString(),
       stock: (stock || "10").toString(),
       image: finalImageUrl,
+      images: parsedImages,
       colors: parsedColors,
       variants: parsedVariants,
     });
@@ -653,23 +696,57 @@ export async function updateProductAction(productId: number, formData: FormData)
       stock = totalStock.toString();
     }
 
-    const imageInput = (formData.get("image") as string) || "";
-    let finalImageUrl = imageInput.trim();
+    // Image(s) handling - up to 3 pictures allowed
+    let parsedImages: string[] | undefined = undefined;
+    const imagesRaw = formData.get("images") as string | null;
+    if (imagesRaw !== null) {
+      parsedImages = [];
+      try {
+        const arr = JSON.parse(imagesRaw);
+        if (Array.isArray(arr)) {
+          parsedImages = arr.map((u: any) => String(u).trim()).filter(Boolean);
+        }
+      } catch (e) {
+        console.warn("Failed to parse images JSON in updateProductAction:", e);
+      }
+    }
 
-    const imageFile = (formData.get("file") || formData.get("imageFile")) as File | null;
-    if (imageFile && typeof imageFile !== "string" && imageFile.size > 0) {
-      const uploadFormData = new FormData();
-      uploadFormData.append("file", imageFile);
-      uploadFormData.append("folder", "bazzario/products");
-      const uploadRes = await uploadFileAction(uploadFormData);
-      if (uploadRes.success && uploadRes.url) {
-        finalImageUrl = uploadRes.url;
+    const legacyImageInput = (formData.get("image") as string) || "";
+    if (legacyImageInput.trim() && parsedImages && !parsedImages.includes(legacyImageInput.trim())) {
+      parsedImages.push(legacyImageInput.trim());
+    }
+
+    const rawFiles = [
+      ...formData.getAll("imageFiles"),
+      ...formData.getAll("files"),
+      formData.get("imageFile"),
+      formData.get("file"),
+    ].filter(Boolean) as (File | string)[];
+
+    for (const f of rawFiles) {
+      if (parsedImages && parsedImages.length >= 3) break;
+      if (typeof f !== "string" && f.size > 0) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", f);
+        uploadFormData.append("folder", "bazzario/products");
+        const uploadRes = await uploadFileAction(uploadFormData);
+        if (uploadRes.success && uploadRes.url) {
+          if (!parsedImages) parsedImages = [];
+          parsedImages.push(uploadRes.url);
+        }
       }
-    } else if (imageInput && imageInput.startsWith("data:image/")) {
-      const uploadRes = await uploadToCloudinary(imageInput, "bazzario/products");
-      if (uploadRes.success && uploadRes.url) {
-        finalImageUrl = uploadRes.url;
+    }
+
+    if (parsedImages) {
+      for (let i = 0; i < parsedImages.length; i++) {
+        if (parsedImages[i].startsWith("data:image/")) {
+          const uploadRes = await uploadToCloudinary(parsedImages[i], "bazzario/products");
+          if (uploadRes.success && uploadRes.url) {
+            parsedImages[i] = uploadRes.url;
+          }
+        }
       }
+      parsedImages = parsedImages.slice(0, 3);
     }
 
     if (!name || !price || !category) {
@@ -693,8 +770,13 @@ export async function updateProductAction(productId: number, formData: FormData)
       updateFields.variants = parsedVariants;
     }
 
-    if (finalImageUrl) {
-      updateFields.image = finalImageUrl;
+    if (parsedImages !== undefined) {
+      updateFields.images = parsedImages;
+      if (parsedImages[0]) {
+        updateFields.image = parsedImages[0];
+      }
+    } else if (legacyImageInput.trim()) {
+      updateFields.image = legacyImageInput.trim();
     }
 
     await db.update(products).set(updateFields).where(eq(products.id, productId));
