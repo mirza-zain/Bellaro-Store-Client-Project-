@@ -86,12 +86,12 @@ export default function Reviews() {
               </p>
             </div>
 
-            {/* Author & Product */}
-            <div className="mt-8 pt-4 border-t border-neutral-100">
+            {/* Author & Product (Clean Zarb-style layout without heavy dividing line) */}
+            <div className="mt-8">
               <h4 className="text-xs sm:text-sm font-semibold text-neutral-900">
                 {review.author}
               </h4>
-              <p className="text-[10px] tracking-wider text-neutral-400 uppercase mt-0.5 font-medium">
+              <p className="text-[10px] sm:text-[11px] tracking-wider text-neutral-400 uppercase mt-0.5 font-medium">
                 {review.product}
               </p>
             </div>

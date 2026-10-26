@@ -79,6 +79,14 @@ export default function AdminClientView({
   const [stock, setStock] = useState("20");
   const [description, setDescription] = useState("");
   const [selectedColors, setSelectedColors] = useState<string[]>(["Black", "Dark Brown"]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([
+    "39",
+    "40",
+    "41",
+    "42",
+    "43",
+    "44",
+  ]);
   const [customColorInput, setCustomColorInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -174,6 +182,19 @@ export default function AdminClientView({
     formData.append("price", price);
     formData.append("stock", stock || "10");
     formData.append("colors", JSON.stringify(selectedColors));
+
+    const parsedPrice = Number(price) || 0;
+    const defaultStock = Number(stock) || 10;
+    const variants =
+      category === "Footwear" && selectedSizes.length > 0
+        ? selectedSizes.map((sz) => ({
+            label: sz,
+            price: parsedPrice,
+            stock: defaultStock,
+          }))
+        : [];
+    formData.append("variants", JSON.stringify(variants));
+
     formData.append("description", description.trim() || `${name} - handcrafted quality`);
     if (selectedFile) {
       formData.append("file", selectedFile);
@@ -633,6 +654,59 @@ export default function AdminClientView({
                   />
                 </div>
               </div>
+
+              {/* Footwear Sizes */}
+              {category === "Footwear" && (
+                <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold uppercase text-neutral-700">
+                      Shoe Sizes ({selectedSizes.length} selected)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSizes(["39", "40", "41", "42", "43", "44", "45"])}
+                        className="text-[10px] text-neutral-700 hover:text-black underline cursor-pointer"
+                      >
+                        All Adults
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSizes([])}
+                        className="text-[10px] text-rose-600 hover:underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1">
+                    {["39", "40", "41", "42", "43", "44", "45"].map((sz) => {
+                      const isSelected = selectedSizes.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedSizes(selectedSizes.filter((s) => s !== sz));
+                            } else {
+                              setSelectedSizes([...selectedSizes, sz]);
+                            }
+                          }}
+                          className={`w-8 h-7 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
+                            isSelected
+                              ? "bg-black text-white border-black font-semibold"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Color Options */}
               <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2.5">

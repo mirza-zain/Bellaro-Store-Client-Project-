@@ -42,6 +42,9 @@ const FOOTWEAR_COLOR_PRESETS = [
   { name: "Camel", hex: "#c19a6b" },
 ];
 
+const ADULT_SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
+const KIDS_SHOE_SIZES = ["28", "29", "30", "31", "32", "33", "34", "35"];
+
 interface ProductsManagerProps {
   initialProducts: Product[];
 }
@@ -176,6 +179,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [formVariants, setFormVariants] = useState<ProductVariant[]>([]);
   const [formColors, setFormColors] = useState<string[]>([]);
   const [customColorInput, setCustomColorInput] = useState("");
+  const [customVariantInput, setCustomVariantInput] = useState("");
   const [formImage, setFormImage] = useState("");
   const [formImagePreview, setFormImagePreview] = useState<string | null>(null);
   const [formSelectedFile, setFormSelectedFile] = useState<File | null>(null);
@@ -218,6 +222,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setFormVariants([]);
     setFormColors(["Black", "Dark Brown"]);
     setCustomColorInput("");
+    setCustomVariantInput("");
     setFormImage("");
     setFormImagePreview(null);
     setFormSelectedFile(null);
@@ -239,13 +244,98 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     const existingColors = Array.isArray((product as any).colors) ? [...(product as any).colors] : [];
     setFormColors(existingColors);
     setCustomColorInput("");
+    setCustomVariantInput("");
     setFormImage(product.image || "");
     setFormImagePreview(product.image || null);
     setFormSelectedFile(null);
     setIsAddModalOpen(true);
   };
 
+  // Base price & stock auto-propagation to variants
+  const handleBasePriceChange = (val: string) => {
+    const oldPriceNum = Number(formPrice) || 0;
+    setFormPrice(val);
+    const newPriceNum = Number(val) || 0;
+    if (newPriceNum > 0) {
+      setFormVariants((prev) =>
+        prev.map((v) => ({
+          ...v,
+          price: v.price === 0 || v.price === oldPriceNum ? newPriceNum : v.price,
+        }))
+      );
+    }
+  };
+
+  const handleBaseStockChange = (val: string) => {
+    const oldStockNum = Number(formStock) || 10;
+    setFormStock(val);
+    const newStockNum = Number(val);
+    if (!isNaN(newStockNum) && newStockNum >= 0) {
+      setFormVariants((prev) =>
+        prev.map((v) => ({
+          ...v,
+          stock: v.stock === 10 || v.stock === oldStockNum ? newStockNum : v.stock,
+        }))
+      );
+    }
+  };
+
   // Variant management handlers
+  const toggleSizeVariant = (size: string) => {
+    const norm = size.trim();
+    const existingIdx = formVariants.findIndex(
+      (v) => v.label.toUpperCase().trim() === norm.toUpperCase()
+    );
+    if (existingIdx >= 0) {
+      setFormVariants((prev) => prev.filter((_, i) => i !== existingIdx));
+    } else {
+      const defaultPrice = Number(formPrice) || 0;
+      const defaultStock = Number(formStock) || 10;
+      setFormVariants((prev) => [
+        ...prev,
+        { label: norm, price: defaultPrice, stock: defaultStock },
+      ]);
+    }
+  };
+
+  const handleSelectAllAdultSizes = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = ADULT_SHOE_SIZES
+        .filter((s) => !existingLabels.has(s.toUpperCase()))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
+  };
+
+  const handleSelectAllKidsSizes = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = KIDS_SHOE_SIZES
+        .filter((s) => !existingLabels.has(s.toUpperCase()))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
+  };
+
+  const handleAddCustomVariant = () => {
+    const val = customVariantInput.trim();
+    if (!val) return;
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    if (!formVariants.some((v) => v.label.toUpperCase().trim() === val.toUpperCase())) {
+      setFormVariants((prev) => [
+        ...prev,
+        { label: val, price: defaultPrice, stock: defaultStock },
+      ]);
+    }
+    setCustomVariantInput("");
+  };
+
   const handleAddVariant = (label = "", priceVal?: string | number, stockVal?: string | number) => {
     const defaultPrice = Number(formPrice) || 0;
     const defaultStock = Number(formStock) || 10;
@@ -257,45 +347,6 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
         stock: stockVal !== undefined ? Number(stockVal) : defaultStock,
       },
     ]);
-  };
-
-  const handleQuickAddShoeSizes = () => {
-    const defaultPrice = Number(formPrice) || 0;
-    const defaultStock = Number(formStock) || 10;
-    const sizes = ["39", "40", "41", "42", "43", "44", "45"];
-    setFormVariants((prev) => {
-      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
-      const toAdd = sizes
-        .filter((s) => !existingLabels.has(s))
-        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
-      return [...prev, ...toAdd];
-    });
-  };
-
-  const handleQuickAddKidsSizes = () => {
-    const defaultPrice = Number(formPrice) || 0;
-    const defaultStock = Number(formStock) || 10;
-    const sizes = ["28", "29", "30", "31", "32", "33", "34", "35"];
-    setFormVariants((prev) => {
-      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
-      const toAdd = sizes
-        .filter((s) => !existingLabels.has(s))
-        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
-      return [...prev, ...toAdd];
-    });
-  };
-
-  const handleQuickAddPerfumeSizes = () => {
-    const defaultPrice = Number(formPrice) || 0;
-    const defaultStock = Number(formStock) || 10;
-    const sizes = ["50ml", "100ml"];
-    setFormVariants((prev) => {
-      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
-      const toAdd = sizes
-        .filter((s) => !existingLabels.has(s))
-        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
-      return [...prev, ...toAdd];
-    });
   };
 
   const handleUpdateVariant = (
@@ -345,29 +396,39 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
       return;
     }
 
-    let finalPrice = formPrice;
-    let finalStock = formStock || "0";
+    const parsedBasePrice = Number(formPrice) || 0;
+    if (parsedBasePrice <= 0 && (!hasVariants || formVariants.some((v) => Number(v.price) <= 0))) {
+      showToast("Please enter a valid base price for your product.", "error");
+      return;
+    }
+
+    // Auto-resolve variants with fallback to base price and default stock
+    const resolvedVariants = formVariants.map((v) => ({
+      label: v.label.trim(),
+      price: Number(v.price) > 0 ? Number(v.price) : parsedBasePrice,
+      stock: Number(v.stock) >= 0 ? Number(v.stock) : (Number(formStock) || 10),
+    }));
 
     if (hasVariants) {
-      for (let i = 0; i < formVariants.length; i++) {
-        const v = formVariants[i];
-        if (!v.label.trim()) {
+      for (let i = 0; i < resolvedVariants.length; i++) {
+        const v = resolvedVariants[i];
+        if (!v.label) {
           showToast(`Variant #${i + 1} is missing a name/label.`, "error");
           return;
         }
-        if (Number(v.price) <= 0) {
-          showToast(`Variant "${v.label}" must have a price greater than 0.`, "error");
+        if (v.price <= 0) {
+          showToast(`Please enter a price for variant "${v.label}".`, "error");
           return;
         }
       }
-      finalPrice = minVariantPrice.toString();
-      finalStock = totalVariantStock.toString();
-    } else {
-      if (!formPrice || Number(formPrice) <= 0) {
-        showToast("Please enter a valid product price.", "error");
-        return;
-      }
     }
+
+    const finalPrice = hasVariants
+      ? Math.min(...resolvedVariants.map((v) => v.price)).toString()
+      : formPrice.trim();
+    const finalStock = hasVariants
+      ? resolvedVariants.reduce((sum, v) => sum + v.stock, 0).toString()
+      : (formStock || "0").trim();
 
     setIsUploading(true);
     let finalImageUrl = formImage.trim();
@@ -392,7 +453,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     formData.append("price", finalPrice);
     formData.append("stock", finalStock);
     formData.append("colors", JSON.stringify(formColors));
-    formData.append("variants", JSON.stringify(hasVariants ? formVariants : []));
+    formData.append("variants", JSON.stringify(hasVariants ? resolvedVariants : []));
     formData.append("image", finalImageUrl);
 
     // If direct upload failed to produce URL and we still have a file, send the single file
@@ -417,7 +478,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                     stock: finalStock,
                     image: finalImageUrl || p.image,
                     colors: formColors,
-                    variants: hasVariants ? formVariants : [],
+                    variants: hasVariants ? resolvedVariants : [],
                   }
                 : p
             )
@@ -1154,7 +1215,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                 </div>
               </div>
 
-              {/* Color Options Section (Essential for Footwear & Leathercraft) */}
+                    {/* Color Options Section */}
               <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-white space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1239,210 +1300,235 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
               </div>
 
               {/* 5. Pricing & Variants Section */}
-              <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-neutral-50/60 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-neutral-50/70 space-y-3.5">
+                {/* Base Price & Default Stock: Always visible */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
-                      <span>Pricing & Inventory</span>
-                      {hasVariants && (
-                        <span className="px-2 py-0.5 text-[10px] bg-black text-white rounded-md font-semibold">
-                          {formVariants.length} Variants
-                        </span>
-                      )}
-                    </h4>
-                    <p className="text-[11px] text-neutral-500 mt-0.5">
-                      {hasVariants
-                        ? "Standalone price is derived from your variants below."
-                        : "Enter direct price, or add multiple variants (sizes, colors)."}
-                    </p>
+                    <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+                      Base Price (PKR) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={formPrice}
+                      onChange={(e) => handleBasePriceChange(e.target.value)}
+                      placeholder="3499"
+                      className="w-full px-3.5 py-2 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
+                    />
                   </div>
 
-                  {!hasVariants ? (
-                    <button
-                      type="button"
-                      onClick={() => handleAddVariant("Standard", formPrice, formStock || "10")}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-black text-white hover:bg-neutral-800 rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs w-full sm:w-auto"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Variants</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleClearAllVariants}
-                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer text-left sm:text-right"
-                    >
-                      Remove All (Use Single Price)
-                    </button>
-                  )}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+                      Default Stock / Size
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formStock}
+                      onChange={(e) => handleBaseStockChange(e.target.value)}
+                      placeholder="20"
+                      className="w-full px-3.5 py-2 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
+                    />
+                  </div>
                 </div>
 
-                {/* Standalone Price & Stock: Only shown when there are NO variants */}
-                {!hasVariants ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-                        Price (PKR) *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min="1"
-                        value={formPrice}
-                        onChange={(e) => setFormPrice(e.target.value)}
-                        placeholder="3499"
-                        className="w-full px-3.5 py-2.5 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black font-semibold"
-                      />
-                    </div>
+                {/* Size Variants Matrix */}
+                <div className="pt-2 border-t border-neutral-200/80 space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
+                      <span>Sizes &amp; Variants</span>
+                      {hasVariants && (
+                        <span className="px-2 py-0.5 text-[10px] bg-black text-white rounded-md font-semibold">
+                          {formVariants.length} Active
+                        </span>
+                      )}
+                    </span>
 
-                    <div>
-                      <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-                        Stock Quantity *
-                      </label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        value={formStock}
-                        onChange={(e) => setFormStock(e.target.value)}
-                        placeholder="25"
-                        className="w-full px-3.5 py-2.5 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black font-semibold"
-                      />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSelectAllAdultSizes}
+                        className="text-[11px] font-semibold text-neutral-700 hover:text-black underline cursor-pointer"
+                      >
+                        + All Adults (39–45)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSelectAllKidsSizes}
+                        className="text-[11px] font-semibold text-neutral-700 hover:text-black underline cursor-pointer"
+                      >
+                        + Kids
+                      </button>
+                      {hasVariants && (
+                        <button
+                          type="button"
+                          onClick={handleClearAllVariants}
+                          className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer ml-1"
+                        >
+                          Clear
+                        </button>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  /* Dynamic Variants Array Builder */
-                  <div className="space-y-3 pt-1">
-                    {/* Quick Add Presets */}
-                    <div className="flex flex-wrap items-center gap-1.5 pb-1">
-                      <span className="text-[11px] font-semibold text-neutral-500 shrink-0">Presets:</span>
-                      <button
-                        type="button"
-                        onClick={handleQuickAddShoeSizes}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
-                      >
-                        + Adults (39–45)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleQuickAddKidsSizes}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
-                      >
-                        + Kids (28–35)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleQuickAddPerfumeSizes}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
-                      >
-                        + 50ml, 100ml (Perfumes)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAddVariant("One Size", formPrice, "25")}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
-                      >
-                        + One Size
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAddVariant("", formPrice, "10")}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer flex items-center gap-1 sm:ml-auto"
-                      >
-                        <Plus className="w-3 h-3" />
-                        <span>+ Custom Variant</span>
-                      </button>
+
+                  {/* Size Toggle Chips */}
+                  <div className="space-y-2 pt-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Adults:</span>
+                      {ADULT_SHOE_SIZES.map((sz) => {
+                        const isSelected = formVariants.some(
+                          (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
+                        );
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => toggleSizeVariant(sz)}
+                            className={`w-9 h-8 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
+                              isSelected
+                                ? "bg-black text-white border-black shadow-xs font-semibold"
+                                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    {/* Variants Rows */}
-                    <div className="space-y-2.5 max-h-72 overflow-y-auto pr-0.5">
-                      {formVariants.map((variant, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 bg-white border border-neutral-200 rounded-2xl shadow-xs space-y-2.5 sm:space-y-0 sm:flex sm:items-center sm:gap-2.5"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between sm:block mb-1 sm:mb-0.5">
-                              <label className="block text-[10px] font-bold uppercase text-neutral-500 tracking-wider">
-                                Variant / Size *
-                              </label>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Kids:</span>
+                      {KIDS_SHOE_SIZES.map((sz) => {
+                        const isSelected = formVariants.some(
+                          (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
+                        );
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => toggleSizeVariant(sz)}
+                            className={`w-8 h-7 rounded-lg text-[11px] font-bold border transition cursor-pointer flex items-center justify-center ${
+                              isSelected
+                                ? "bg-black text-white border-black shadow-xs font-semibold"
+                                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {formCategory === "Perfumes" && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Bottles:</span>
+                        {["50ml", "100ml"].map((sz) => {
+                          const isSelected = formVariants.some(
+                            (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
+                          );
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => toggleSizeVariant(sz)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
+                                isSelected
+                                  ? "bg-black text-white border-black shadow-xs font-semibold"
+                                  : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                              }`}
+                            >
+                              {sz}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Custom Size / Variant Input */}
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <input
+                      type="text"
+                      value={customVariantInput}
+                      onChange={(e) => setCustomVariantInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomVariant();
+                        }
+                      }}
+                      placeholder="Add custom size (e.g. 46, One Size, 30ml)..."
+                      className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-black font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomVariant}
+                      className="px-3 py-1.5 bg-neutral-900 text-white rounded-lg text-xs font-semibold hover:bg-black transition cursor-pointer shrink-0"
+                    >
+                      + Add
+                    </button>
+                  </div>
+
+                  {/* Compact, Ultra-clean Variant Table (Shown only when variants exist) */}
+                  {hasVariants && (
+                    <div className="mt-3 border border-neutral-200 rounded-xl bg-white overflow-hidden shadow-2xs">
+                      <div className="grid grid-cols-[64px_1fr_1fr_32px] sm:grid-cols-[80px_1fr_1fr_36px] bg-neutral-100/90 px-2.5 py-1.5 text-[10px] font-bold text-neutral-600 uppercase tracking-wider border-b border-neutral-200">
+                        <div>Size</div>
+                        <div>Price (PKR)</div>
+                        <div>Stock</div>
+                        <div className="text-right">✕</div>
+                      </div>
+                      <div className="divide-y divide-neutral-100 max-h-56 overflow-y-auto">
+                        {formVariants.map((variant, idx) => (
+                          <div
+                            key={idx}
+                            className="grid grid-cols-[64px_1fr_1fr_32px] sm:grid-cols-[80px_1fr_1fr_36px] items-center gap-1.5 px-2.5 py-1.5 hover:bg-neutral-50/50"
+                          >
+                            <input
+                              type="text"
+                              value={variant.label}
+                              onChange={(e) => handleUpdateVariant(idx, "label", e.target.value)}
+                              className="w-full px-2 py-1 text-xs font-bold text-neutral-900 bg-neutral-100 border border-transparent hover:border-neutral-300 rounded-lg focus:bg-white focus:border-black text-center"
+                            />
+                            <input
+                              type="number"
+                              min="1"
+                              value={variant.price || ""}
+                              onChange={(e) => handleUpdateVariant(idx, "price", e.target.value)}
+                              placeholder={formPrice || "0"}
+                              className="w-full px-2 py-1 text-xs font-semibold text-neutral-900 bg-neutral-50 border border-neutral-200 rounded-lg focus:bg-white focus:border-black"
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              value={variant.stock !== undefined ? variant.stock : ""}
+                              onChange={(e) => handleUpdateVariant(idx, "stock", e.target.value)}
+                              placeholder={formStock || "10"}
+                              className="w-full px-2 py-1 text-xs font-semibold text-neutral-900 bg-neutral-50 border border-neutral-200 rounded-lg focus:bg-white focus:border-black"
+                            />
+                            <div className="text-right">
                               <button
                                 type="button"
                                 onClick={() => handleRemoveVariant(idx)}
-                                className="sm:hidden p-1 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                                title="Remove this variant"
+                                className="p-1 text-neutral-400 hover:text-rose-600 rounded-md transition cursor-pointer"
+                                title="Remove variant"
                               >
-                                <Trash2 className="w-4 h-4 text-rose-500" />
+                                <Trash2 className="w-3.5 h-3.5 mx-auto" />
                               </button>
                             </div>
-                            <input
-                              type="text"
-                              required
-                              value={variant.label}
-                              onChange={(e) => handleUpdateVariant(idx, "label", e.target.value)}
-                              placeholder="e.g. Small, M, Red / XL"
-                              className="w-full px-3 py-2 sm:py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
-                            />
                           </div>
-
-                          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2 shrink-0">
-                            <div className="sm:w-28 md:w-32">
-                              <label className="block text-[10px] font-bold uppercase text-neutral-500 tracking-wider mb-1 sm:mb-0.5">
-                                Price (PKR) *
-                              </label>
-                              <input
-                                type="number"
-                                required
-                                min="1"
-                                value={variant.price || ""}
-                                onChange={(e) => handleUpdateVariant(idx, "price", e.target.value)}
-                                placeholder="2999"
-                                className="w-full px-3 py-2 sm:py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
-                              />
-                            </div>
-
-                            <div className="sm:w-20 md:w-24">
-                              <label className="block text-[10px] font-bold uppercase text-neutral-500 tracking-wider mb-1 sm:mb-0.5">
-                                Stock *
-                              </label>
-                              <input
-                                type="number"
-                                required
-                                min="0"
-                                value={variant.stock}
-                                onChange={(e) => handleUpdateVariant(idx, "stock", e.target.value)}
-                                placeholder="10"
-                                className="w-full px-3 py-2 sm:py-1.5 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveVariant(idx)}
-                            className="hidden sm:flex mt-4 p-2 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer shrink-0 items-center justify-center"
-                            title="Remove this variant"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Summary Bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs bg-neutral-100/90 px-3.5 py-2.5 rounded-xl text-neutral-700 font-medium">
-                      <div className="flex items-center gap-2.5">
-                        <span>
-                          Variants: <strong className="text-black">{formVariants.length}</strong>
-                        </span>
-                        <span>•</span>
-                        <span>
-                          Total Stock: <strong className="text-black">{totalVariantStock} units</strong>
-                        </span>
+                        ))}
                       </div>
-                      <div>
+
+                      {/* Summary Bar */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] bg-neutral-50 px-3 py-1.5 text-neutral-600 font-medium border-t border-neutral-200">
                         <span>
-                          Base Price:{" "}
+                          Variants: <strong className="text-black">{formVariants.length}</strong> • Total Stock:{" "}
+                          <strong className="text-black">{totalVariantStock} units</strong>
+                        </span>
+                        <span>
+                          Price:{" "}
                           <strong className="text-black">
                             PKR {minVariantPrice.toLocaleString()}
                             {minVariantPrice !== maxVariantPrice && ` - ${maxVariantPrice.toLocaleString()}`}
@@ -1450,8 +1536,8 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                         </span>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* 6. Product Image Section */}
