@@ -76,105 +76,80 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Menu: Home, Categories (dropdown), Footwear, Perfumes, Track, Contact */}
+        {/* Desktop Menu: Home, Footwear (with dropdown), Perfumes, Track, Contact */}
         <div className="hidden md:flex">
-          <ul className="flex justify-center items-center gap-6 lg:gap-8">
+          <ul className="flex justify-center items-center gap-8 lg:gap-10">
             <li className="text-sm font-semibold uppercase tracking-wider text-neutral-800 hover:text-black transition">
               <Link href="/">Home</Link>
             </li>
 
-            {/* Categories Mega Dropdown */}
+            {/* Footwear with Mega Dropdown */}
             <li
               className="relative py-2"
               onMouseEnter={() => setFootwearDropdownOpen(true)}
               onMouseLeave={() => setFootwearDropdownOpen(false)}
             >
-              <button
-                type="button"
+              <Link
+                href="/products?category=Footwear"
                 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-neutral-800 hover:text-black transition cursor-pointer"
               >
-                <span>Categories</span>
+                <span>Footwear</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
                     footwearDropdownOpen ? "rotate-180" : ""
                   }`}
                 />
-              </button>
+              </Link>
 
-              {/* Categories Dropdown Menu */}
+              {/* Footwear Dropdown Menu */}
               {footwearDropdownOpen && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 w-[400px] bg-white rounded-2xl shadow-2xl border border-neutral-100 p-5 z-50 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 w-[380px] bg-white rounded-2xl shadow-2xl border border-neutral-100 p-5 z-50 animate-in fade-in slide-in-from-top-1 duration-200">
                   <div className="border-b border-neutral-100 pb-2 mb-3 flex items-center justify-between">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400">
-                      Store Categories
+                      Footwear Categories
                     </span>
-                    <Link
-                      href="/products"
-                      onClick={() => setFootwearDropdownOpen(false)}
-                      className="text-[11px] font-semibold text-black hover:underline"
-                    >
-                      View All Products →
-                    </Link>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
                     <Link
                       href="/products?category=Footwear"
                       onClick={() => setFootwearDropdownOpen(false)}
-                      className="p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition group"
+                      className="text-[11px] font-semibold text-black hover:underline"
                     >
-                      <span className="text-xs font-bold text-neutral-900 group-hover:text-black block">
-                        👞 Footwear
-                      </span>
-                      <span className="text-[10px] text-neutral-400 block mt-0.5">
-                        Loafers, Moccasins &amp; Slides
-                      </span>
-                    </Link>
-
-                    <Link
-                      href="/products?category=Perfumes"
-                      onClick={() => setFootwearDropdownOpen(false)}
-                      className="p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition group"
-                    >
-                      <span className="text-xs font-bold text-neutral-900 group-hover:text-black block">
-                        ✨ Perfumes
-                      </span>
-                      <span className="text-[10px] text-neutral-400 block mt-0.5">
-                        Long-Lasting EDP &amp; Extrait
-                      </span>
+                      View All →
                     </Link>
                   </div>
 
-                  <div className="mt-3 pt-3 border-t border-neutral-100">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block mb-2">
-                      Popular Footwear Sub-Categories
-                    </span>
-                    <ul className="space-y-1">
-                      {footwearCategories.map((item) => (
-                        <li key={item.name}>
-                          <Link
-                            href={item.href}
-                            onClick={() => setFootwearDropdownOpen(false)}
-                            className="group/item flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-neutral-50 transition"
-                          >
-                            <span className="text-xs font-medium text-neutral-800 group-hover/item:text-black">
-                              {item.name}
-                            </span>
-                            <span className="text-[10px] text-neutral-400">
-                              {item.desc.split("&")[0]}
-                            </span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+                  <ul className="space-y-1.5">
+                    {footwearCategories.map((item) => (
+                      <li key={item.name}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setFootwearDropdownOpen(false)}
+                          className="group/item flex flex-col px-3 py-2 rounded-xl hover:bg-neutral-50 transition"
+                        >
+                          <span className="text-sm font-bold text-neutral-900 group-hover/item:text-black">
+                            {item.name}
+                          </span>
+                          <span className="text-xs text-neutral-400 group-hover/item:text-neutral-600">
+                            {item.desc}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-4 pt-3 border-t border-neutral-100 bg-neutral-50 -mx-5 -mb-5 p-3 px-5 rounded-b-2xl flex justify-between items-center text-xs">
+                    <span className="text-neutral-500 text-[11px]">Handcrafted in Karachi</span>
+                    <a
+                      href="https://www.instagram.com/bellaro.pk/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-black hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>@bellaro.pk</span>
+                      <span>↗</span>
+                    </a>
                   </div>
                 </div>
               )}
-            </li>
-
-            {/* Direct Footwear Link */}
-            <li className="text-sm font-semibold uppercase tracking-wider text-neutral-800 hover:text-black transition">
-              <Link href="/products?category=Footwear">Footwear</Link>
             </li>
 
             {/* Direct Perfumes Link */}
@@ -277,16 +252,6 @@ export default function Navbar() {
                     className="text-xl font-bold tracking-wider uppercase hover:opacity-70 transition-opacity"
                   >
                     Home
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    href="/products"
-                    onClick={() => setMenuOpen(false)}
-                    className="text-xl font-bold tracking-wider uppercase hover:opacity-70 transition-opacity"
-                  >
-                    All Categories
                   </Link>
                 </li>
 

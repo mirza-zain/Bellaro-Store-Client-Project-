@@ -83,8 +83,29 @@ const realisticPerfumeReviews = [
 ];
 
 export async function getProductReviews(
-  productId: number
+  productId: number,
+  category?: string,
+  productName?: string
 ): Promise<ProductReviewsSummary> {
+  const cat = (category || "").toLowerCase();
+  const name = (productName || "").toLowerCase();
+  const isPerfume =
+    cat.includes("perfume") ||
+    cat.includes("fragrance") ||
+    cat.includes("scent") ||
+    name.includes("parfum") ||
+    name.includes("perfume") ||
+    name.includes("fragrance") ||
+    name.includes("amber") ||
+    name.includes("oud") ||
+    name.includes("edp") ||
+    name.includes("eau de") ||
+    name.includes("extrait") ||
+    productId === 7 ||
+    productId === 8;
+
+  const pool = isPerfume ? realisticPerfumeReviews : realisticFootwearReviews;
+
   try {
     await ensureTablesExist();
 
@@ -112,9 +133,7 @@ export async function getProductReviews(
       };
     }
 
-    // Default authentic-looking verified buyer reviews tailored for Bellaro
-    const isPerfume = productId === 7 || productId === 8;
-    const pool = isPerfume ? realisticPerfumeReviews : realisticFootwearReviews;
+    // Default authentic-looking verified buyer reviews tailored specifically for this product
     const fakeList: Review[] = pool.map((t, idx) => ({
       id: 9000 + productId * 10 + idx,
       productId,
@@ -136,7 +155,7 @@ export async function getProductReviews(
     };
   } catch (error) {
     console.warn("Using fallback product reviews:", error);
-    const fakeList: Review[] = realisticFootwearReviews.map((t, idx) => ({
+    const fakeList: Review[] = pool.map((t, idx) => ({
       id: 9000 + productId * 10 + idx,
       productId,
       orderId: 100 + idx,

@@ -188,7 +188,7 @@ export default async function ProductDetailPage({ params }: Props) {
     notFound();
   }
 
-  const reviewsSummary = await getProductReviews(productId);
+  const reviewsSummary = await getProductReviews(productId, product.category, product.name);
 
   const inStock = Number(product.stock) > 0;
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
