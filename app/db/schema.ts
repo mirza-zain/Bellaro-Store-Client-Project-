@@ -24,6 +24,7 @@ export const products = pgTable("products", {
 export type OrderItem = {
   productId: number;
   name: string;
+  category?: string;
   quantity: number;
   price: number;
   image?: string;

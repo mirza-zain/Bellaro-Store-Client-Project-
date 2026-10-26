@@ -18,6 +18,7 @@ import {
   Upload,
 } from "lucide-react";
 import { Product, Order } from "@/app/db/schema";
+import { getItemSectionInfo, getOrderAudienceBadges } from "@/app/lib/utils/orderSection";
 import {
   addProductAction,
   DashboardStats,
@@ -420,44 +421,88 @@ export default function AdminClientView({
                 <tr>
                   <th className="px-5 py-3">Order</th>
                   <th className="px-5 py-3">Customer</th>
+                  <th className="px-5 py-3">Items & Target Section</th>
                   <th className="px-5 py-3">Destination</th>
                   <th className="px-5 py-3">Total Amount</th>
                   <th className="px-5 py-3 text-right">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {ordersList.slice(0, 6).map((order) => (
-                  <tr key={order.id} className="hover:bg-neutral-50 transition">
-                    <td className="px-5 py-3.5 font-bold font-mono text-neutral-900">
-                      {order.orderCode || `#ORD-${order.id.toString().padStart(4, "0")}`}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="font-semibold text-neutral-900">{order.customerName}</p>
-                      <p className="text-[11px] text-neutral-400">{order.customerEmail}</p>
-                    </td>
-                    <td className="px-5 py-3.5 text-neutral-600">
-                      {order.city || "Pakistan"}
-                    </td>
-                    <td className="px-5 py-3.5 font-bold text-neutral-900">
-                      PKR {Number(order.totalAmount).toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          order.status === "Delivered"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : order.status === "Shipped"
-                            ? "bg-blue-100 text-blue-800"
-                            : order.status === "Processing"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {ordersList.slice(0, 6).map((order) => {
+                  const audienceBadges = getOrderAudienceBadges(order.items).badges;
+                  return (
+                    <tr key={order.id} className="hover:bg-neutral-50 transition">
+                      <td className="px-5 py-3.5">
+                        <p className="font-bold font-mono text-neutral-900">
+                          {order.orderCode || `#ORD-${order.id.toString().padStart(4, "0")}`}
+                        </p>
+                        {audienceBadges.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {audienceBadges.map((b, i) => (
+                              <span
+                                key={i}
+                                className={`inline-block px-1.5 py-0.2 rounded text-[9px] border ${b.badgeClass}`}
+                              >
+                                {b.shortLabel}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <p className="font-semibold text-neutral-900">{order.customerName}</p>
+                        <p className="text-[11px] text-neutral-400">{order.customerEmail}</p>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex flex-col gap-1 max-w-[260px]">
+                          {order.items && order.items.length > 0 ? (
+                            order.items.slice(0, 2).map((it: any, idx: number) => {
+                              const sec = getItemSectionInfo(it);
+                              return (
+                                <div key={idx} className="flex items-center gap-1.5 text-xs text-neutral-800">
+                                  <span className="font-bold text-[11px]">{it.quantity}x</span>
+                                  <span className="truncate max-w-[120px]" title={it.name}>{it.name}</span>
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${sec.badgeClass}`}>
+                                    {sec.shortLabel}
+                                  </span>
+                                  {it.variant && (
+                                    <span className="text-[10px] text-neutral-400 font-mono truncate max-w-[60px]">{it.variant}</span>
+                                  )}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <span className="text-neutral-400 text-xs">-</span>
+                          )}
+                          {order.items && order.items.length > 2 && (
+                            <span className="text-[10px] text-neutral-400 font-medium">+{order.items.length - 2} more items</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5 text-neutral-600">
+                        {order.city || "Pakistan"}
+                      </td>
+                      <td className="px-5 py-3.5 font-bold text-neutral-900">
+                        PKR {Number(order.totalAmount).toLocaleString()}
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            order.status === "Delivered"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : order.status === "Shipped"
+                              ? "bg-blue-100 text-blue-800"
+                              : order.status === "Processing"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

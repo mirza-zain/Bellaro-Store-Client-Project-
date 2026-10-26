@@ -27,6 +27,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import { Order } from "@/app/db/schema";
+import { getItemSectionInfo, getOrderAudienceBadges } from "@/app/lib/utils/orderSection";
 import {
   updateOrderStatusAction,
   verifyPaymentAction,
@@ -44,6 +45,7 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
   const [isPending, startTransition] = useTransition();
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
@@ -150,13 +152,24 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
     const itemsRows = items
       .map((it: any) => {
         const lineTotal = (Number(it.price) || 0) * (Number(it.quantity) || 1);
+        const sec = getItemSectionInfo(it);
+        const sectionBadge =
+          sec.section === "kids"
+            ? `<div style="display: inline-block; margin-left: 6px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">🧒 Kids Section</div>`
+            : sec.section === "adults"
+            ? `<div style="display: inline-block; margin-left: 6px; background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">👞 Adults Section</div>`
+            : sec.section === "perfumes"
+            ? `<div style="display: inline-block; margin-left: 6px; background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">🌸 Perfumes</div>`
+            : "";
+
         return `
         <tr>
           <td style="padding: 8px 10px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #111;">
             ${it.name || "Product"}
+            ${sectionBadge}
           </td>
-          <td style="padding: 8px 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">
-            ${it.variant ? `<span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 11px;">${it.variant}</span>` : "Standard"}
+          <td style="padding: 8px 10px; border-bottom: 1px solid #e5e7eb; color: #374151;">
+            ${it.variant ? `<span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">${it.variant}</span>` : "Standard"}
           </td>
           <td style="padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: center; font-weight: 700; color: #111;">
             ${it.quantity}
@@ -570,7 +583,13 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
       paymentFilter === "all" ||
       o.paymentMethod.toLowerCase() === paymentFilter.toLowerCase();
 
-    return matchesSearch && matchesStatus && matchesPayment;
+    const matchesSection =
+      sectionFilter === "all" ||
+      (o.items &&
+        Array.isArray(o.items) &&
+        o.items.some((it: any) => getItemSectionInfo(it).section === sectionFilter));
+
+    return matchesSearch && matchesStatus && matchesPayment && matchesSection;
   });
 
   return (
@@ -746,7 +765,18 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <select
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+              className="py-2 px-3 text-xs bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-800 font-semibold focus:outline-hidden focus:border-black w-full sm:w-auto"
+            >
+              <option value="all">All Sections (Kids & Adults)</option>
+              <option value="kids">🧒 Kids Section Only</option>
+              <option value="adults">👞 Adults Section Only</option>
+              <option value="perfumes">🌸 Perfumes Only</option>
+            </select>
+
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value)}
@@ -757,12 +787,13 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
               <option value="bank_transfer">Bank Transfer</option>
             </select>
 
-            {(searchTerm || statusFilter !== "all" || paymentFilter !== "all") && (
+            {(searchTerm || statusFilter !== "all" || paymentFilter !== "all" || sectionFilter !== "all") && (
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all");
                   setPaymentFilter("all");
+                  setSectionFilter("all");
                 }}
                 className="px-3 py-2 text-xs text-neutral-500 hover:text-black font-semibold whitespace-nowrap cursor-pointer"
               >
@@ -839,7 +870,19 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
                             </span>
                           </div>
                         )}
-                        <p className="text-xs text-neutral-400 mt-0.5" suppressHydrationWarning>{dateStr}</p>
+                        {getOrderAudienceBadges(o.items).badges.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {getOrderAudienceBadges(o.items).badges.map((b, i) => (
+                              <span
+                                key={i}
+                                className={`inline-block px-1.5 py-0.5 rounded text-[10px] border ${b.badgeClass}`}
+                              >
+                                {b.label}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-xs text-neutral-400 mt-1" suppressHydrationWarning>{dateStr}</p>
                       </td>
 
                       {/* Customer Info */}
@@ -867,23 +910,41 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
                       {/* Purchased Items Preview */}
                       <td className="py-3.5 px-4">
                         {o.items && o.items.length > 0 ? (
-                          <div className="space-y-1">
-                            <div className="flex flex-wrap gap-1 max-w-[260px]">
-                              {o.items.slice(0, 3).map((it: any, idx: number) => (
-                                <span
+                          <div className="space-y-1.5 max-w-[280px]">
+                            {o.items.slice(0, 3).map((it: any, idx: number) => {
+                              const sec = getItemSectionInfo(it);
+                              return (
+                                <div
                                   key={idx}
-                                  className="inline-block text-[11px] bg-neutral-100 text-neutral-800 px-2 py-0.5 rounded-lg border border-neutral-200 truncate max-w-[220px]"
-                                  title={`${it.name} (Qty: ${it.quantity}${it.variant ? `, ${it.variant}` : ""})`}
+                                  className="flex items-center gap-2 p-1.5 bg-neutral-50 hover:bg-neutral-100 rounded-xl border border-neutral-200/80 transition"
                                 >
-                                  <strong className="font-semibold">{it.quantity}x</strong> {it.name}
-                                  {it.variant && ` [${it.variant}]`}
-                                </span>
-                              ))}
-                            </div>
+                                  {it.image && (
+                                    <div className="relative w-7 h-7 rounded-lg overflow-hidden bg-white shrink-0 border border-neutral-200">
+                                      <Image src={it.image} alt={it.name} fill className="object-cover" />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate font-semibold text-neutral-900 text-xs" title={it.name}>
+                                      <strong className="font-bold text-black">{it.quantity}x</strong> {it.name}
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                                      <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.2 rounded border ${sec.badgeClass}`}>
+                                        {sec.label}
+                                      </span>
+                                      {it.variant && (
+                                        <span className="text-[10px] text-neutral-600 font-mono">
+                                          {it.variant}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                             {o.items.length > 3 && (
                               <button
                                 onClick={() => setSelectedDetailsOrder(o)}
-                                className="text-[11px] text-neutral-500 hover:text-black font-semibold underline cursor-pointer"
+                                className="text-[11px] text-neutral-500 hover:text-black font-semibold underline cursor-pointer pl-1"
                               >
                                 +{o.items.length - 3} more items
                               </button>
@@ -1063,6 +1124,14 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
                       {selectedDetailsOrder.orderCode}
                     </span>
                   )}
+                  {getOrderAudienceBadges(selectedDetailsOrder.items).badges.map((b, i) => (
+                    <span
+                      key={i}
+                      className={`px-2 py-0.5 text-xs rounded-md border ${b.badgeClass}`}
+                    >
+                      {b.label}
+                    </span>
+                  ))}
                   <button
                     type="button"
                     onClick={() => {
@@ -1130,7 +1199,8 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
                   <thead className="bg-neutral-50 text-neutral-500 font-semibold border-b border-neutral-100">
                     <tr>
                       <th className="py-2.5 px-3">Item</th>
-                      <th className="py-2.5 px-3">Variant</th>
+                      <th className="py-2.5 px-3">Target Section</th>
+                      <th className="py-2.5 px-3">Variant / Size</th>
                       <th className="py-2.5 px-3 text-center">Qty</th>
                       <th className="py-2.5 px-3 text-right">Price</th>
                       <th className="py-2.5 px-3 text-right">Total</th>
@@ -1140,28 +1210,39 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
                     {selectedDetailsOrder.items && selectedDetailsOrder.items.length > 0 ? (
                       selectedDetailsOrder.items.map((it: any, idx: number) => {
                         const lineTotal = (Number(it.price) || 0) * (Number(it.quantity) || 1);
+                        const sec = getItemSectionInfo(it);
                         return (
                           <tr key={idx} className="hover:bg-neutral-50/50">
                             <td className="py-2.5 px-3 font-medium text-neutral-900">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2.5">
                                 {it.image && (
                                   <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200">
                                     <Image src={it.image} alt={it.name} fill className="object-cover" />
                                   </div>
                                 )}
-                                <span>{it.name}</span>
+                                <div>
+                                  <span className="font-semibold">{it.name}</span>
+                                  {it.productId && (
+                                    <p className="text-[10px] text-neutral-400 font-mono">ID: #{it.productId}</p>
+                                  )}
+                                </div>
                               </div>
                             </td>
-                            <td className="py-2.5 px-3 text-neutral-500">
+                            <td className="py-2.5 px-3">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${sec.badgeClass}`}>
+                                {sec.label}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-neutral-700">
                               {it.variant ? (
-                                <span className="px-2 py-0.5 bg-neutral-100 rounded-md font-medium text-[11px]">
+                                <span className="px-2 py-0.5 bg-neutral-100 rounded-md font-mono text-[11px] border border-neutral-200 font-medium">
                                   {it.variant}
                                 </span>
                               ) : (
-                                "Standard"
+                                <span className="text-neutral-400">Standard</span>
                               )}
                             </td>
-                            <td className="py-2.5 px-3 text-center font-bold">{it.quantity}</td>
+                            <td className="py-2.5 px-3 text-center font-bold text-neutral-900">{it.quantity}</td>
                             <td className="py-2.5 px-3 text-right text-neutral-600">
                               PKR {Number(it.price).toLocaleString()}
                             </td>
@@ -1173,7 +1254,7 @@ export default function OrdersManager({ initialOrders }: OrdersManagerProps) {
                       })
                     ) : (
                       <tr>
-                        <td colSpan={5} className="py-4 text-center text-neutral-400">No items</td>
+                        <td colSpan={6} className="py-4 text-center text-neutral-400">No items</td>
                       </tr>
                     )}
                   </tbody>

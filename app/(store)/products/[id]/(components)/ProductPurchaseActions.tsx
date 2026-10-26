@@ -63,9 +63,22 @@ export default function ProductPurchaseActions({
   const currentStock = activeVariant ? Number(activeVariant.stock) : stock;
   const inStock = currentStock > 0;
 
+  const isFootwear = category?.toLowerCase() === "footwear";
+  let variantDisplay = selectedVariant;
+  if (isFootwear && selectedVariant) {
+    const num = parseInt(selectedVariant.replace(/\D/g, ""), 10);
+    if (!isNaN(num)) {
+      if (num >= 28 && num <= 38 && !selectedVariant.toLowerCase().includes("kid")) {
+        variantDisplay = `Kids (Size ${num})`;
+      } else if (num >= 39 && num <= 48 && !selectedVariant.toLowerCase().includes("adult")) {
+        variantDisplay = `Adults (Size ${num})`;
+      }
+    }
+  }
+
   const combinedVariantLabel = [
     selectedColor ? selectedColor : null,
-    selectedVariant ? selectedVariant : null,
+    variantDisplay ? variantDisplay : null,
   ].filter(Boolean).join(" • ");
 
   const handleAddToCart = () => {
@@ -103,7 +116,6 @@ export default function ProductPurchaseActions({
   };
 
   const [showSizeGuide, setShowSizeGuide] = useState(false);
-  const isFootwear = category?.toLowerCase() === "footwear";
 
   const isKidsShoeSize = (label: string) => {
     const num = parseInt(label.replace(/\D/g, ""), 10);
