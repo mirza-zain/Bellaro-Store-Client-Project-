@@ -23,6 +23,7 @@ const curatedProductsMap: Record<number, any> = {
     price: "5850",
     stock: "20",
     image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
+    colors: ["Jet Black", "Coffee Brown"],
     variants: [
       { label: "EU 40 / UK 6", price: 5850, stock: 4 },
       { label: "EU 41 / UK 7", price: 5850, stock: 6 },
@@ -39,6 +40,7 @@ const curatedProductsMap: Record<number, any> = {
     price: "6200",
     stock: "15",
     image: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80",
+    colors: ["Burgundy Oxblood", "Deep Black"],
     variants: [
       { label: "EU 40 / UK 6", price: 6200, stock: 3 },
       { label: "EU 41 / UK 7", price: 6200, stock: 5 },
@@ -55,6 +57,7 @@ const curatedProductsMap: Record<number, any> = {
     price: "4650",
     stock: "25",
     image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80",
+    colors: ["Classic Tan", "Chocolate Brown", "Navy Blue"],
     variants: [
       { label: "EU 40 / UK 6", price: 4650, stock: 5 },
       { label: "EU 41 / UK 7", price: 4650, stock: 8 },
@@ -71,6 +74,7 @@ const curatedProductsMap: Record<number, any> = {
     price: "3250",
     stock: "30",
     image: "https://images.unsplash.com/photo-1621252179027-94459d278660?auto=format&fit=crop&w=800&q=80",
+    colors: ["Matte Black", "Cognac Brown"],
     variants: [
       { label: "EU 40 / UK 6", price: 3250, stock: 8 },
       { label: "EU 41 / UK 7", price: 3250, stock: 10 },
@@ -87,6 +91,7 @@ const curatedProductsMap: Record<number, any> = {
     price: "3450",
     stock: "20",
     image: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80",
+    colors: ["Charcoal Grey", "Tan Brown"],
     variants: [
       { label: "EU 40 / UK 6", price: 3450, stock: 5 },
       { label: "EU 41 / UK 7", price: 3450, stock: 8 },
@@ -102,6 +107,7 @@ const curatedProductsMap: Record<number, any> = {
     price: "2450",
     stock: "35",
     image: "https://images.unsplash.com/photo-1603808033192-082d6919d3e1?auto=format&fit=crop&w=800&q=80",
+    colors: ["Jet Black", "Navy", "Olive"],
     variants: [
       { label: "EU 40 / UK 6", price: 2450, stock: 10 },
       { label: "EU 41 / UK 7", price: 2450, stock: 15 },
@@ -294,6 +300,7 @@ export default async function ProductDetailPage({ params }: Props) {
             stock={Number(product.stock)}
             image={product.image || "/images/img1.jpg"}
             variants={product.variants || []}
+            colors={product.colors || []}
           />
 
           {/* Trust Guarantees */}

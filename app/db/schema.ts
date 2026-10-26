@@ -4,6 +4,7 @@ export type ProductVariant = {
   label: string;
   price: number;
   stock: number;
+  color?: string;
 };
 
 export const products = pgTable("products", {
@@ -15,6 +16,7 @@ export const products = pgTable("products", {
   price: numeric("price").notNull(),
   stock: numeric("stock").notNull(),
   image: text("image"),
+  colors: jsonb("colors").$type<string[]>().notNull().default([]),
   variants: jsonb("variants").$type<ProductVariant[]>().notNull().default([]),
 });
 

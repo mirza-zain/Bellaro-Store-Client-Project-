@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
   Edit,
   Eye,
@@ -28,6 +29,18 @@ import {
   updateProductStockAction,
   deleteProductAction,
 } from "@/app/lib/actions/admin";
+
+const FOOTWEAR_COLOR_PRESETS = [
+  { name: "Black", hex: "#171717" },
+  { name: "Dark Brown", hex: "#3e2723" },
+  { name: "Classic Tan", hex: "#b87333" },
+  { name: "Burgundy Oxblood", hex: "#6b1426" },
+  { name: "Navy Blue", hex: "#1a2a44" },
+  { name: "Olive Green", hex: "#556b2f" },
+  { name: "Charcoal Grey", hex: "#4b5563" },
+  { name: "White", hex: "#f5f5f4" },
+  { name: "Camel", hex: "#c19a6b" },
+];
 
 interface ProductsManagerProps {
   initialProducts: Product[];
@@ -161,6 +174,8 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [formStock, setFormStock] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formVariants, setFormVariants] = useState<ProductVariant[]>([]);
+  const [formColors, setFormColors] = useState<string[]>([]);
+  const [customColorInput, setCustomColorInput] = useState("");
   const [formImage, setFormImage] = useState("");
   const [formImagePreview, setFormImagePreview] = useState<string | null>(null);
   const [formSelectedFile, setFormSelectedFile] = useState<File | null>(null);
@@ -182,6 +197,14 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const handleAddCustomColor = () => {
+    const val = customColorInput.trim();
+    if (val && !formColors.includes(val)) {
+      setFormColors((prev) => [...prev, val]);
+      setCustomColorInput("");
+    }
+  };
+
   const handleOpenAddModal = () => {
     setEditingProduct(null);
     setFormName("");
@@ -193,6 +216,8 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setFormPrice("");
     setFormStock("20");
     setFormVariants([]);
+    setFormColors(["Black", "Dark Brown"]);
+    setCustomColorInput("");
     setFormImage("");
     setFormImagePreview(null);
     setFormSelectedFile(null);
@@ -211,6 +236,9 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setFormStock(product.stock ? product.stock.toString() : "");
     const existingVariants = Array.isArray(product.variants) ? [...product.variants] : [];
     setFormVariants(existingVariants);
+    const existingColors = Array.isArray((product as any).colors) ? [...(product as any).colors] : [];
+    setFormColors(existingColors);
+    setCustomColorInput("");
     setFormImage(product.image || "");
     setFormImagePreview(product.image || null);
     setFormSelectedFile(null);
@@ -363,6 +391,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     formData.append("subCategory", formSubCategory.trim() || "General");
     formData.append("price", finalPrice);
     formData.append("stock", finalStock);
+    formData.append("colors", JSON.stringify(formColors));
     formData.append("variants", JSON.stringify(hasVariants ? formVariants : []));
     formData.append("image", finalImageUrl);
 
@@ -387,6 +416,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                     price: finalPrice,
                     stock: finalStock,
                     image: finalImageUrl || p.image,
+                    colors: formColors,
                     variants: hasVariants ? formVariants : [],
                   }
                 : p
@@ -677,6 +707,21 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                           ))}
                         </div>
                       )}
+                      {(p as any).colors && (p as any).colors.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-200/50 px-1.5 py-0.5 rounded">
+                            Colors:
+                          </span>
+                          {(p as any).colors.map((c: string, ci: number) => (
+                            <span
+                              key={ci}
+                              className="text-[10px] bg-white border border-neutral-200 text-neutral-700 px-1.5 py-0.5 rounded font-medium"
+                            >
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -819,6 +864,21 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                                     className="text-[10px] bg-neutral-100 border border-neutral-200/80 text-neutral-700 px-1.5 py-0.5 rounded"
                                   >
                                     {v.label} ({v.stock})
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {(p as any).colors && (p as any).colors.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1 mt-1">
+                                <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded">
+                                  Colors:
+                                </span>
+                                {(p as any).colors.map((c: string, ci: number) => (
+                                  <span
+                                    key={ci}
+                                    className="text-[10px] bg-neutral-50 border border-neutral-200 text-neutral-700 px-1.5 py-0.5 rounded font-medium"
+                                  >
+                                    {c}
                                   </span>
                                 ))}
                               </div>
@@ -1091,6 +1151,90 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Color Options Section (Essential for Footwear & Leathercraft) */}
+              <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-white space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
+                      <span>Shoe &amp; Product Colors</span>
+                      {formColors.length > 0 && (
+                        <span className="px-2 py-0.5 text-[10px] bg-black text-white rounded-md font-semibold">
+                          {formColors.length} Active
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-[11px] text-neutral-500 mt-0.5">
+                      Click to toggle available colors, or enter a custom color below.
+                    </p>
+                  </div>
+                  {formColors.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormColors([])}
+                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+
+                {/* Preset Luxury Footwear Colors */}
+                <div className="flex flex-wrap gap-1.5">
+                  {FOOTWEAR_COLOR_PRESETS.map((cp) => {
+                    const isSelected = formColors.includes(cp.name);
+                    return (
+                      <button
+                        key={cp.name}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setFormColors(formColors.filter((c) => c !== cp.name));
+                          } else {
+                            setFormColors([...formColors, cp.name]);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer ${
+                          isSelected
+                            ? "bg-black text-white border-black shadow-xs font-semibold"
+                            : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                        }`}
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0"
+                          style={{ backgroundColor: cp.hex }}
+                        />
+                        <span>{cp.name}</span>
+                        {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Color Input */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={customColorInput}
+                    onChange={(e) => setCustomColorInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomColor();
+                      }
+                    }}
+                    placeholder="Type custom color (e.g. Suede Tan, Midnight Blue, Cognac)..."
+                    className="flex-1 px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomColor}
+                    className="px-3 py-2 bg-neutral-900 text-white rounded-xl text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
+                  >
+                    + Add Color
+                  </button>
                 </div>
               </div>
 

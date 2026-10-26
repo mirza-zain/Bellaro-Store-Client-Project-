@@ -15,7 +15,22 @@ interface Props {
   stock: number;
   image: string;
   variants?: ProductVariant[];
+  colors?: string[];
 }
+
+const getColorHex = (name: string): string => {
+  const n = name.toLowerCase();
+  if (n.includes("black")) return "#171717";
+  if (n.includes("dark brown") || n.includes("chocolate") || n.includes("coffee")) return "#3e2723";
+  if (n.includes("brown")) return "#5d4037";
+  if (n.includes("tan") || n.includes("camel") || n.includes("cognac")) return "#b87333";
+  if (n.includes("burgundy") || n.includes("oxblood") || n.includes("maroon")) return "#6b1426";
+  if (n.includes("navy") || n.includes("blue")) return "#1a2a44";
+  if (n.includes("olive") || n.includes("green")) return "#556b2f";
+  if (n.includes("charcoal") || n.includes("grey") || n.includes("gray")) return "#4b5563";
+  if (n.includes("white") || n.includes("beige") || n.includes("cream")) return "#f5f5f4";
+  return "#262626";
+};
 
 export default function ProductPurchaseActions({
   productId,
@@ -25,12 +40,16 @@ export default function ProductPurchaseActions({
   stock,
   image,
   variants = [],
+  colors = [],
 }: Props) {
   const router = useRouter();
   const { addToCart } = useCart();
 
   const [selectedVariant, setSelectedVariant] = useState<string>(
     variants.length > 0 ? variants[0].label : ""
+  );
+  const [selectedColor, setSelectedColor] = useState<string>(
+    colors.length > 0 ? colors[0] : ""
   );
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -39,6 +58,11 @@ export default function ProductPurchaseActions({
   const currentPrice = activeVariant ? Number(activeVariant.price) : price;
   const currentStock = activeVariant ? Number(activeVariant.stock) : stock;
   const inStock = currentStock > 0;
+
+  const combinedVariantLabel = [
+    selectedColor ? selectedColor : null,
+    selectedVariant ? selectedVariant : null,
+  ].filter(Boolean).join(" • ");
 
   const handleAddToCart = () => {
     if (!inStock) return;
@@ -49,7 +73,7 @@ export default function ProductPurchaseActions({
       price: currentPrice,
       quantity,
       image,
-      variant: selectedVariant || undefined,
+      variant: combinedVariantLabel || undefined,
       maxStock: currentStock,
     });
 
@@ -68,7 +92,7 @@ export default function ProductPurchaseActions({
       price: currentPrice,
       quantity,
       image,
-      variant: selectedVariant || undefined,
+      variant: combinedVariantLabel || undefined,
       maxStock: currentStock,
     });
     router.push("/checkout");
@@ -76,6 +100,51 @@ export default function ProductPurchaseActions({
 
   return (
     <div className="space-y-6">
+      {/* Color Selection (Leather / Shade) */}
+      {colors && colors.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold uppercase text-neutral-700 tracking-wider">
+              Available Colors
+            </label>
+            {selectedColor && (
+              <span className="text-xs text-neutral-500 font-medium">
+                Color: <strong className="text-black font-semibold">{selectedColor}</strong>
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {colors.map((c) => {
+              const isSelected = selectedColor === c;
+              const swatchHex = getColorHex(c);
+              const isLight = swatchHex === "#f5f5f4";
+
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setSelectedColor(c)}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition cursor-pointer min-h-[42px] touch-manipulation ${
+                    isSelected
+                      ? "border-black bg-black text-white shadow-xs"
+                      : "border-neutral-200 bg-white text-neutral-800 hover:border-neutral-400"
+                  }`}
+                >
+                  <span
+                    className={`w-3.5 h-3.5 rounded-full shrink-0 border ${
+                      isLight ? "border-neutral-300" : "border-white/30"
+                    }`}
+                    style={{ backgroundColor: swatchHex }}
+                  />
+                  <span>{c}</span>
+                  {isSelected && <Check className="w-3.5 h-3.5 ml-0.5" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Variants Selection */}
       {variants && variants.length > 0 && (
         <div>

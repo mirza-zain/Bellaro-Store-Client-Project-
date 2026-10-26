@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ArrowRight,
+  Check,
   CheckCircle2,
   DollarSign,
   Package,
@@ -25,6 +26,18 @@ import {
   applySizesToCategoryAction,
   FootwearSizePresets,
 } from "@/app/lib/actions/admin";
+
+const FOOTWEAR_COLOR_PRESETS = [
+  { name: "Black", hex: "#171717" },
+  { name: "Dark Brown", hex: "#3e2723" },
+  { name: "Classic Tan", hex: "#b87333" },
+  { name: "Burgundy Oxblood", hex: "#6b1426" },
+  { name: "Navy Blue", hex: "#1a2a44" },
+  { name: "Olive Green", hex: "#556b2f" },
+  { name: "Charcoal Grey", hex: "#4b5563" },
+  { name: "White", hex: "#f5f5f4" },
+  { name: "Camel", hex: "#c19a6b" },
+];
 
 interface AdminClientViewProps {
   stats: DashboardStats;
@@ -65,8 +78,18 @@ export default function AdminClientView({
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("20");
   const [description, setDescription] = useState("");
+  const [selectedColors, setSelectedColors] = useState<string[]>(["Black", "Dark Brown"]);
+  const [customColorInput, setCustomColorInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleAddCustomColor = () => {
+    const val = customColorInput.trim();
+    if (val && !selectedColors.includes(val)) {
+      setSelectedColors((prev) => [...prev, val]);
+      setCustomColorInput("");
+    }
+  };
 
   const showToast = (text: string, type: "success" | "error" = "success") => {
     setStatusMessage({ text, type });
@@ -150,6 +173,7 @@ export default function AdminClientView({
     formData.append("subCategory", subCategory.trim() || category);
     formData.append("price", price);
     formData.append("stock", stock || "10");
+    formData.append("colors", JSON.stringify(selectedColors));
     formData.append("description", description.trim() || `${name} - handcrafted quality`);
     if (selectedFile) {
       formData.append("file", selectedFile);
@@ -607,6 +631,78 @@ export default function AdminClientView({
                     placeholder="20"
                     className="w-full px-3.5 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black"
                   />
+                </div>
+              </div>
+
+              {/* Color Options */}
+              <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase text-neutral-700">
+                    Shoe / Product Colors {selectedColors.length > 0 && `(${selectedColors.length} selected)`}
+                  </label>
+                  {selectedColors.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedColors([])}
+                      className="text-[10px] text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {FOOTWEAR_COLOR_PRESETS.map((cp) => {
+                    const isSelected = selectedColors.includes(cp.name);
+                    return (
+                      <button
+                        key={cp.name}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedColors(selectedColors.filter((c) => c !== cp.name));
+                          } else {
+                            setSelectedColors([...selectedColors, cp.name]);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border transition cursor-pointer ${
+                          isSelected
+                            ? "bg-black text-white border-black font-semibold"
+                            : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                        }`}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full border border-black/20 shrink-0"
+                          style={{ backgroundColor: cp.hex }}
+                        />
+                        <span>{cp.name}</span>
+                        {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <input
+                    type="text"
+                    value={customColorInput}
+                    onChange={(e) => setCustomColorInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomColor();
+                      }
+                    }}
+                    placeholder="Add custom color (e.g. Suede Tan)..."
+                    className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-black"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomColor}
+                    className="px-3 py-1.5 bg-black text-white rounded-lg text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
+                  >
+                    + Add
+                  </button>
                 </div>
               </div>
 

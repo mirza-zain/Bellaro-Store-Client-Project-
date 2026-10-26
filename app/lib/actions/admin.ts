@@ -29,8 +29,13 @@ export async function ensureTablesExist() {
         price NUMERIC NOT NULL,
         stock NUMERIC NOT NULL,
         image TEXT,
+        colors JSONB NOT NULL DEFAULT '[]'::jsonb,
         variants JSONB NOT NULL DEFAULT '[]'::jsonb
       );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS colors JSONB NOT NULL DEFAULT '[]'::jsonb;
     `);
 
     await db.execute(sql`
@@ -472,6 +477,19 @@ export async function addProductAction(formData: FormData) {
       }
     }
 
+    const colorsRaw = formData.get("colors") as string | null;
+    let parsedColors: string[] = [];
+    if (colorsRaw) {
+      try {
+        const raw = JSON.parse(colorsRaw);
+        if (Array.isArray(raw)) {
+          parsedColors = raw.map((c: any) => String(c).trim()).filter(Boolean);
+        }
+      } catch (e) {
+        console.warn("Failed to parse colors JSON:", e);
+      }
+    }
+
     if (parsedVariants.length > 0) {
       const minPrice = Math.min(...parsedVariants.map((v) => v.price));
       price = minPrice > 0 ? minPrice.toString() : (price || "0");
@@ -508,6 +526,7 @@ export async function addProductAction(formData: FormData) {
       price: price.toString(),
       stock: (stock || "10").toString(),
       image: finalImageUrl,
+      colors: parsedColors,
       variants: parsedVariants,
     });
 
@@ -614,6 +633,19 @@ export async function updateProductAction(productId: number, formData: FormData)
       }
     }
 
+    const colorsRaw = formData.get("colors") as string | null;
+    let parsedColors: string[] | undefined = undefined;
+    if (colorsRaw !== null) {
+      try {
+        const raw = JSON.parse(colorsRaw);
+        if (Array.isArray(raw)) {
+          parsedColors = raw.map((c: any) => String(c).trim()).filter(Boolean);
+        }
+      } catch (e) {
+        console.warn("Failed to parse colors JSON in updateProductAction:", e);
+      }
+    }
+
     if (parsedVariants && parsedVariants.length > 0) {
       const minPrice = Math.min(...parsedVariants.map((v) => v.price));
       price = minPrice > 0 ? minPrice.toString() : (price || "0");
@@ -652,6 +684,10 @@ export async function updateProductAction(productId: number, formData: FormData)
       price: price.toString(),
       stock: (stock || "0").toString(),
     };
+
+    if (parsedColors !== undefined) {
+      updateFields.colors = parsedColors;
+    }
 
     if (parsedVariants !== undefined) {
       updateFields.variants = parsedVariants;

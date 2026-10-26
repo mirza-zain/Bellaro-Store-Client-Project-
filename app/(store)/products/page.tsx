@@ -35,6 +35,7 @@ const curatedBellaroCatalog = [
     price: "5850",
     stock: "20",
     image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
+    colors: ["Jet Black", "Coffee Brown"],
     variants: [],
   },
   {
@@ -46,6 +47,7 @@ const curatedBellaroCatalog = [
     price: "6200",
     stock: "15",
     image: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=800&q=80",
+    colors: ["Burgundy Oxblood", "Deep Black"],
     variants: [],
   },
   {
@@ -57,6 +59,7 @@ const curatedBellaroCatalog = [
     price: "4650",
     stock: "25",
     image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80",
+    colors: ["Classic Tan", "Chocolate Brown", "Navy Blue"],
     variants: [],
   },
   {
@@ -68,6 +71,7 @@ const curatedBellaroCatalog = [
     price: "3250",
     stock: "30",
     image: "https://images.unsplash.com/photo-1621252179027-94459d278660?auto=format&fit=crop&w=800&q=80",
+    colors: ["Matte Black", "Cognac Brown"],
     variants: [],
   },
   {
@@ -79,6 +83,7 @@ const curatedBellaroCatalog = [
     price: "3450",
     stock: "20",
     image: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80",
+    colors: ["Charcoal Grey", "Tan Brown"],
     variants: [],
   },
   {
@@ -90,6 +95,7 @@ const curatedBellaroCatalog = [
     price: "2450",
     stock: "35",
     image: "https://images.unsplash.com/photo-1603808033192-082d6919d3e1?auto=format&fit=crop&w=800&q=80",
+    colors: ["Jet Black", "Navy", "Olive"],
     variants: [],
   },
   {
@@ -101,6 +107,7 @@ const curatedBellaroCatalog = [
     price: "6800",
     stock: "35",
     image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80",
+    colors: [],
     variants: [],
   },
   {
@@ -112,6 +119,7 @@ const curatedBellaroCatalog = [
     price: "7200",
     stock: "28",
     image: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=800&q=80",
+    colors: [],
     variants: [],
   },
 ];
