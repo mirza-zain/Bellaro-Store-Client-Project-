@@ -49,6 +49,7 @@ const ADULT_SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
 const ADULT_SIZES_39_44 = ["39", "40", "41", "42", "43", "44"];
 const ADULT_SIZES_40_45 = ["40", "41", "42", "43", "44", "45"];
 const KIDS_SHOE_SIZES = ["31", "32", "33", "34", "35", "36", "37", "38"];
+const PERFUME_BOTTLE_SIZES = ["30ml", "50ml", "100ml", "200ml"];
 
 interface ProductsManagerProps {
   initialProducts: Product[];
@@ -142,9 +143,8 @@ async function uploadToCloudinaryClient(file: File): Promise<string | null> {
 }
 
 const subCategoryPresets: Record<string, string[]> = {
-  Footwear: ["Loafers", "Moccasins", "Slides", "Sandals", "Flip-Flops"],
+  Footwear: ["Loafers", "Moccasins", "Slides", "Sandals", "Peshori", "Chappal"],
   Perfumes: ["Eau de Parfum (EDP)", "Extrait de Parfum", "Attar / Fragrance Oil"],
-  Accessories: ["Leather Care", "Shoe Horn", "Insoles"],
 };
 
 export default function ProductsManager({ initialProducts }: ProductsManagerProps) {
@@ -156,12 +156,12 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [isPending, startTransition] = useTransition();
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
-  // Dynamic existing categories derived from current products (defaults to authentic Bellaro categories)
+  // Dynamic existing categories derived from current products (defaults to authentic Bellaro categories: Footwear & Perfumes)
   const existingCategories = useMemo(() => {
-    const defaultSet = new Set<string>(["Footwear", "Perfumes", "Accessories"]);
+    const defaultSet = new Set<string>(["Footwear", "Perfumes"]);
     productsList.forEach((p) => {
       const cat = p.category?.trim();
-      if (cat && cat !== "Clothing" && cat !== "Jewelry") {
+      if (cat && cat !== "Clothing" && cat !== "Jewelry" && cat !== "Accessories") {
         defaultSet.add(cat);
       }
     });
@@ -190,7 +190,9 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [formSelectedFile, setFormSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Derived variant calculations
+  // Derived category & variant calculations
+  const isFootwear = formCategory.trim().toLowerCase() === "footwear";
+  const isPerfumes = formCategory.trim().toLowerCase() === "perfumes";
   const hasVariants = formVariants.length > 0;
   const totalVariantStock = formVariants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
   const minVariantPrice = formVariants.length > 0 ? Math.min(...formVariants.map((v) => Number(v.price) || 0)) : 0;
@@ -345,6 +347,30 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setFormVariants((prev) => {
       const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
       const toAdd = KIDS_SHOE_SIZES
+        .filter((s) => !existingLabels.has(s.toUpperCase()))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
+  };
+
+  const handleSelectPerfume50and100 = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = ["50ml", "100ml"]
+        .filter((s) => !existingLabels.has(s.toUpperCase()))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
+  };
+
+  const handleSelectPerfumeAllSizes = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = PERFUME_BOTTLE_SIZES
         .filter((s) => !existingLabels.has(s.toUpperCase()))
         .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
       return [...prev, ...toAdd];
@@ -1192,7 +1218,22 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                           setCustomNewCategory("");
                           setFormCategory("");
                         } else {
-                          setFormCategory(e.target.value);
+                          const nextCat = e.target.value;
+                          setFormCategory(nextCat);
+                          if (!editingProduct) {
+                            if (nextCat.toLowerCase() === "perfumes") {
+                              setFormColors([]);
+                              setFormVariants([
+                                { label: "50ml", price: Number(formPrice) || 0, stock: Number(formStock) || 20 },
+                                { label: "100ml", price: Number(formPrice) || 0, stock: Number(formStock) || 20 },
+                              ]);
+                              setFormSubCategory("Eau de Parfum (EDP)");
+                            } else if (nextCat.toLowerCase() === "footwear") {
+                              setFormColors(["White", "Blue", "Brown", "Mustard", "Peach", "Black"]);
+                              setFormVariants([]);
+                              setFormSubCategory("Loafers");
+                            }
+                          }
                         }
                       }}
                       className="w-full px-3.5 py-2.5 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black cursor-pointer font-medium"
@@ -1244,89 +1285,93 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                 </div>
               </div>
 
-                    {/* Color Options Section */}
-              <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-white space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
-                      <span>Shoe &amp; Product Colors</span>
-                      {formColors.length > 0 && (
-                        <span className="px-2 py-0.5 text-[10px] bg-black text-white rounded-md font-semibold">
-                          {formColors.length} Active
-                        </span>
-                      )}
-                    </h4>
-                    <p className="text-[11px] text-neutral-500 mt-0.5">
-                      Click to toggle available colors, or enter a custom color below.
-                    </p>
+              {/* Color Options Section: Only for Footwear & Non-Perfume Items */}
+              {!isPerfumes && (
+                <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-white space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
+                        <span>Shoe &amp; Product Colors</span>
+                        {formColors.length > 0 && (
+                          <span className="px-2 py-0.5 text-[10px] bg-black text-white rounded-md font-semibold">
+                            {formColors.length} Active
+                          </span>
+                        )}
+                      </h4>
+                      <p className="text-[11px] text-neutral-500 mt-0.5">
+                        Click to toggle available colors, or enter a custom color below.
+                      </p>
+                    </div>
+                    {formColors.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setFormColors([])}
+                        className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                    )}
                   </div>
-                  {formColors.length > 0 && (
+
+                  {/* Preset Luxury Footwear Colors */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {FOOTWEAR_COLOR_PRESETS.map((cp) => {
+                      const isSelected = formColors.includes(cp.name);
+                      return (
+                        <button
+                          key={cp.name}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setFormColors(formColors.filter((c) => c !== cp.name));
+                            } else {
+                              setFormColors([...formColors, cp.name]);
+                            }
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer ${
+                            isSelected
+                              ? "bg-black text-white border-black shadow-xs font-semibold"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                          }`}
+                        >
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
+                              cp.name === "White" ? "border-neutral-300" : "border-black/20"
+                            }`}
+                            style={{ backgroundColor: cp.hex }}
+                          />
+                          <span>{cp.name}</span>
+                          {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Color Input */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="text"
+                      value={customColorInput}
+                      onChange={(e) => setCustomColorInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomColor();
+                        }
+                      }}
+                      placeholder="Type custom color (e.g. Suede Tan, Midnight Blue, Cognac)..."
+                      className="flex-1 px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-medium"
+                    />
                     <button
                       type="button"
-                      onClick={() => setFormColors([])}
-                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:underline cursor-pointer"
+                      onClick={handleAddCustomColor}
+                      className="px-3 py-2 bg-neutral-900 text-white rounded-xl text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
                     >
-                      Clear All
+                      + Add Color
                     </button>
-                  )}
+                  </div>
                 </div>
-
-                {/* Preset Luxury Footwear Colors */}
-                <div className="flex flex-wrap gap-1.5">
-                  {FOOTWEAR_COLOR_PRESETS.map((cp) => {
-                    const isSelected = formColors.includes(cp.name);
-                    return (
-                      <button
-                        key={cp.name}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setFormColors(formColors.filter((c) => c !== cp.name));
-                          } else {
-                            setFormColors([...formColors, cp.name]);
-                          }
-                        }}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer ${
-                          isSelected
-                            ? "bg-black text-white border-black shadow-xs font-semibold"
-                            : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
-                        }`}
-                      >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full border border-black/20 shrink-0"
-                          style={{ backgroundColor: cp.hex }}
-                        />
-                        <span>{cp.name}</span>
-                        {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom Color Input */}
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="text"
-                    value={customColorInput}
-                    onChange={(e) => setCustomColorInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddCustomColor();
-                      }
-                    }}
-                    placeholder="Type custom color (e.g. Suede Tan, Midnight Blue, Cognac)..."
-                    className="flex-1 px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-medium"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddCustomColor}
-                    className="px-3 py-2 bg-neutral-900 text-white rounded-xl text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
-                  >
-                    + Add Color
-                  </button>
-                </div>
-              </div>
+              )}
 
               {/* 5. Pricing & Variants Section */}
               <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-neutral-50/70 space-y-3.5">
@@ -1366,7 +1411,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                 <div className="pt-2 border-t border-neutral-200/80 space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-1.5">
                     <span className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
-                      <span>Sizes &amp; Variants</span>
+                      <span>{isPerfumes ? "Bottle Sizes" : "Shoe Sizes & Variants"}</span>
                       {hasVariants && (
                         <span className="px-2 py-0.5 text-[10px] bg-black text-white rounded-md font-semibold">
                           {formVariants.length} Active
@@ -1374,31 +1419,70 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                       )}
                     </span>
 
+                    {/* Presets by Category */}
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={handleSelectAdults39to44}
-                        className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
-                        title="Select adult sizes 39 to 44"
-                      >
-                        + Adults (39–44)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSelectAdults40to45}
-                        className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
-                        title="Select adult sizes 40 to 45"
-                      >
-                        + Adults (40–45)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSelectAllKidsSizes}
-                        className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
-                        title="Select kids sizes 31 to 38"
-                      >
-                        + Kids (31–38)
-                      </button>
+                      {isPerfumes ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleSelectPerfume50and100}
+                            className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                            title="Add 50ml and 100ml bottles"
+                          >
+                            + 50ml &amp; 100ml
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleSizeVariant("50ml")}
+                            className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                          >
+                            + 50ml
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleSizeVariant("100ml")}
+                            className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                          >
+                            + 100ml
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSelectPerfumeAllSizes}
+                            className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                            title="Add 30ml, 50ml, 100ml, 200ml"
+                          >
+                            + All Volumes
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleSelectAdults39to44}
+                            className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                            title="Select adult sizes 39 to 44"
+                          >
+                            + Adults (39–44)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSelectAdults40to45}
+                            className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                            title="Select adult sizes 40 to 45"
+                          >
+                            + Adults (40–45)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSelectAllKidsSizes}
+                            className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                            title="Select kids sizes 31 to 38"
+                          >
+                            + Kids (31–38)
+                          </button>
+                        </>
+                      )}
+
                       {hasVariants && (
                         <button
                           type="button"
@@ -1413,56 +1497,11 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
 
                   {/* Size Toggle Chips */}
                   <div className="space-y-2 pt-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Adults (39–45):</span>
-                      {ADULT_SHOE_SIZES.map((sz) => {
-                        const isSelected = formVariants.some(
-                          (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
-                        );
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => toggleSizeVariant(sz)}
-                            className={`w-9 h-8 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
-                              isSelected
-                                ? "bg-black text-white border-black shadow-xs font-semibold"
-                                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
-                            }`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Kids (31–38):</span>
-                      {KIDS_SHOE_SIZES.map((sz) => {
-                        const isSelected = formVariants.some(
-                          (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
-                        );
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            onClick={() => toggleSizeVariant(sz)}
-                            className={`w-8 h-7 rounded-lg text-[11px] font-bold border transition cursor-pointer flex items-center justify-center ${
-                              isSelected
-                                ? "bg-black text-white border-black shadow-xs font-semibold"
-                                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
-                            }`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {formCategory === "Perfumes" && (
-                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                        <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Bottles:</span>
-                        {["50ml", "100ml"].map((sz) => {
+                    {isPerfumes ? (
+                      /* Perfume Bottle Sizes Only */
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Bottle Sizes:</span>
+                        {PERFUME_BOTTLE_SIZES.map((sz) => {
                           const isSelected = formVariants.some(
                             (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
                           );
@@ -1471,7 +1510,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                               key={sz}
                               type="button"
                               onClick={() => toggleSizeVariant(sz)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
                                 isSelected
                                   ? "bg-black text-white border-black shadow-xs font-semibold"
                                   : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
@@ -1482,6 +1521,55 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                           );
                         })}
                       </div>
+                    ) : (
+                      /* Footwear Sizes Only */
+                      <>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Adults (39–45):</span>
+                          {ADULT_SHOE_SIZES.map((sz) => {
+                            const isSelected = formVariants.some(
+                              (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
+                            );
+                            return (
+                              <button
+                                key={sz}
+                                type="button"
+                                onClick={() => toggleSizeVariant(sz)}
+                                className={`w-9 h-8 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
+                                  isSelected
+                                    ? "bg-black text-white border-black shadow-xs font-semibold"
+                                    : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                                }`}
+                              >
+                                {sz}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Kids (31–38):</span>
+                          {KIDS_SHOE_SIZES.map((sz) => {
+                            const isSelected = formVariants.some(
+                              (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
+                            );
+                            return (
+                              <button
+                                key={sz}
+                                type="button"
+                                onClick={() => toggleSizeVariant(sz)}
+                                className={`w-8 h-7 rounded-lg text-[11px] font-bold border transition cursor-pointer flex items-center justify-center ${
+                                  isSelected
+                                    ? "bg-black text-white border-black shadow-xs font-semibold"
+                                    : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                                }`}
+                              >
+                                {sz}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
                     )}
                   </div>
 
@@ -1497,7 +1585,11 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                           handleAddCustomVariant();
                         }
                       }}
-                      placeholder="Add custom size (e.g. 46, One Size, 30ml)..."
+                      placeholder={
+                        isPerfumes
+                          ? "Add custom bottle size (e.g. 10ml, 150ml)..."
+                          : "Add custom shoe size (e.g. 46, One Size)..."
+                      }
                       className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-black font-medium"
                     />
                     <button

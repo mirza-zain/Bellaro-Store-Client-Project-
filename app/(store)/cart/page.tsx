@@ -52,7 +52,7 @@ export default function CartPage() {
           <ShoppingBag className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
           <h2 className="text-2xl font-bold text-neutral-900">Your bag is empty</h2>
           <p className="text-sm text-neutral-500 mt-1 max-w-sm mx-auto">
-            Looks like you haven&apos;t added any streetwear or accessories to your bag yet.
+            Looks like you haven&apos;t added any handcrafted footwear or luxury perfumes to your bag yet.
           </p>
           <Link
             href="/products"

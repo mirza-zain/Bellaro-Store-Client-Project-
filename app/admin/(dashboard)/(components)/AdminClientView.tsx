@@ -189,7 +189,7 @@ export default function AdminClientView({
     const parsedPrice = Number(price) || 0;
     const defaultStock = Number(stock) || 10;
     const variants =
-      category === "Footwear" && selectedSizes.length > 0
+      selectedSizes.length > 0
         ? selectedSizes.map((sz) => ({
             label: sz,
             price: parsedPrice,
@@ -197,6 +197,7 @@ export default function AdminClientView({
           }))
         : [];
     formData.append("variants", JSON.stringify(variants));
+    formData.append("colors", JSON.stringify(category === "Perfumes" ? [] : selectedColors));
 
     formData.append("description", description.trim() || `${name} - handcrafted quality`);
     if (selectedFile) {
@@ -606,12 +607,23 @@ export default function AdminClientView({
                   </label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black"
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setCategory(newCat);
+                      if (newCat === "Perfumes") {
+                        setSelectedSizes(["50ml", "100ml"]);
+                        setSubCategory("Eau de Parfum (EDP)");
+                        setSelectedColors([]);
+                      } else {
+                        setSelectedSizes(["39", "40", "41", "42", "43", "44"]);
+                        setSubCategory("Loafers");
+                        setSelectedColors(["White", "Blue", "Brown", "Mustard", "Peach", "Black"]);
+                      }
+                    }}
+                    className="w-full px-3.5 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-medium"
                   >
                     <option value="Footwear">Footwear</option>
                     <option value="Perfumes">Perfumes</option>
-                    <option value="Accessories">Accessories</option>
                   </select>
                 </div>
 
@@ -770,77 +782,143 @@ export default function AdminClientView({
                 </div>
               )}
 
-              {/* Color Options */}
-              <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold uppercase text-neutral-700">
-                    Shoe / Product Colors {selectedColors.length > 0 && `(${selectedColors.length} selected)`}
-                  </label>
-                  {selectedColors.length > 0 && (
+              {/* Perfume Bottle Sizes */}
+              {category === "Perfumes" && (
+                <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
+                    <label className="block text-xs font-semibold uppercase text-neutral-700">
+                      Bottle Sizes ({selectedSizes.length} selected)
+                    </label>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSizes(["50ml", "100ml"])}
+                        className="px-2 py-0.5 text-[10px] font-semibold bg-white border border-neutral-200 rounded text-neutral-700 hover:text-black hover:border-black cursor-pointer"
+                      >
+                        + 50ml &amp; 100ml
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSizes(["30ml", "50ml", "100ml", "200ml"])}
+                        className="px-2 py-0.5 text-[10px] font-semibold bg-white border border-neutral-200 rounded text-neutral-700 hover:text-black hover:border-black cursor-pointer"
+                      >
+                        + All Volumes
+                      </button>
+                      {selectedSizes.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSizes([])}
+                          className="text-[10px] text-rose-600 hover:underline cursor-pointer ml-1"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {["30ml", "50ml", "100ml", "200ml"].map((sz) => {
+                      const isSelected = selectedSizes.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedSizes(selectedSizes.filter((s) => s !== sz));
+                            } else {
+                              setSelectedSizes([...selectedSizes, sz]);
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
+                            isSelected
+                              ? "bg-black text-white border-black font-semibold"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Color Options: Only for Footwear & Non-Perfume products */}
+              {category !== "Perfumes" && (
+                <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold uppercase text-neutral-700">
+                      Shoe / Product Colors {selectedColors.length > 0 && `(${selectedColors.length} selected)`}
+                    </label>
+                    {selectedColors.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedColors([])}
+                        className="text-[10px] text-rose-600 hover:underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {FOOTWEAR_COLOR_PRESETS.map((cp) => {
+                      const isSelected = selectedColors.includes(cp.name);
+                      return (
+                        <button
+                          key={cp.name}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedColors(selectedColors.filter((c) => c !== cp.name));
+                            } else {
+                              setSelectedColors([...selectedColors, cp.name]);
+                            }
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border transition cursor-pointer ${
+                            isSelected
+                              ? "bg-black text-white border-black font-semibold"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                          }`}
+                        >
+                          <span
+                            className={`w-2 h-2 rounded-full border ${
+                              cp.name === "White" ? "border-neutral-300" : "border-black/20"
+                            } shrink-0`}
+                            style={{ backgroundColor: cp.hex }}
+                          />
+                          <span>{cp.name}</span>
+                          {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    <input
+                      type="text"
+                      value={customColorInput}
+                      onChange={(e) => setCustomColorInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomColor();
+                        }
+                      }}
+                      placeholder="Add custom color (e.g. Suede Tan)..."
+                      className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-black"
+                    />
                     <button
                       type="button"
-                      onClick={() => setSelectedColors([])}
-                      className="text-[10px] text-rose-600 hover:underline cursor-pointer"
+                      onClick={handleAddCustomColor}
+                      className="px-3 py-1.5 bg-black text-white rounded-lg text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
                     >
-                      Clear
+                      + Add
                     </button>
-                  )}
+                  </div>
                 </div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {FOOTWEAR_COLOR_PRESETS.map((cp) => {
-                    const isSelected = selectedColors.includes(cp.name);
-                    return (
-                      <button
-                        key={cp.name}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedColors(selectedColors.filter((c) => c !== cp.name));
-                          } else {
-                            setSelectedColors([...selectedColors, cp.name]);
-                          }
-                        }}
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium border transition cursor-pointer ${
-                          isSelected
-                            ? "bg-black text-white border-black font-semibold"
-                            : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
-                        }`}
-                      >
-                        <span
-                          className="w-2 h-2 rounded-full border border-black/20 shrink-0"
-                          style={{ backgroundColor: cp.hex }}
-                        />
-                        <span>{cp.name}</span>
-                        {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="flex items-center gap-1.5 pt-0.5">
-                  <input
-                    type="text"
-                    value={customColorInput}
-                    onChange={(e) => setCustomColorInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddCustomColor();
-                      }
-                    }}
-                    placeholder="Add custom color (e.g. Suede Tan)..."
-                    className="flex-1 px-3 py-1.5 text-xs bg-white border border-neutral-200 rounded-lg focus:outline-hidden focus:border-black"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddCustomColor}
-                    className="px-3 py-1.5 bg-black text-white rounded-lg text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
-                  >
-                    + Add
-                  </button>
-                </div>
-              </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
