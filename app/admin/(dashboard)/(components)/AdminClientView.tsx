@@ -77,7 +77,7 @@ export default function AdminClientView({
   // Quick Add Product Form states
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Footwear");
-  const [subCategory, setSubCategory] = useState("Loafers");
+  const [subCategory, setSubCategory] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("20");
   const [description, setDescription] = useState("");
@@ -610,13 +610,12 @@ export default function AdminClientView({
                     onChange={(e) => {
                       const newCat = e.target.value;
                       setCategory(newCat);
+                      setSubCategory("");
                       if (newCat === "Perfumes") {
-                        setSelectedSizes(["50ml", "100ml"]);
-                        setSubCategory("Eau de Parfum (EDP)");
+                        setSelectedSizes([]);
                         setSelectedColors([]);
                       } else {
-                        setSelectedSizes(["39", "40", "41", "42", "43", "44"]);
-                        setSubCategory("Loafers");
+                        setSelectedSizes([]);
                         setSelectedColors(["White", "Blue", "Brown", "Mustard", "Peach", "Black"]);
                       }
                     }}

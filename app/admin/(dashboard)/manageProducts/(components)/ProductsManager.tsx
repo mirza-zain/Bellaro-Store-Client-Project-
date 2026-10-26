@@ -451,39 +451,31 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
       return;
     }
 
-    const parsedBasePrice = Number(formPrice) || 0;
-    if (parsedBasePrice <= 0 && (!hasVariants || formVariants.some((v) => Number(v.price) <= 0))) {
-      showToast("Please enter a valid base price for your product.", "error");
-      return;
-    }
-
-    // Auto-resolve variants with fallback to base price and default stock
-    const resolvedVariants = formVariants.map((v) => ({
-      label: v.label.trim(),
-      price: Number(v.price) > 0 ? Number(v.price) : parsedBasePrice,
-      stock: Number(v.stock) >= 0 ? Number(v.stock) : (Number(formStock) || 10),
-    }));
+    let finalPrice = "";
+    let finalStock = "0";
 
     if (hasVariants) {
-      for (let i = 0; i < resolvedVariants.length; i++) {
-        const v = resolvedVariants[i];
-        if (!v.label) {
+      for (let i = 0; i < formVariants.length; i++) {
+        const v = formVariants[i];
+        if (!v.label.trim()) {
           showToast(`Variant #${i + 1} is missing a name/label.`, "error");
           return;
         }
-        if (v.price <= 0) {
+        if (Number(v.price) <= 0) {
           showToast(`Please enter a price for variant "${v.label}".`, "error");
           return;
         }
       }
+      finalPrice = minVariantPrice.toString();
+      finalStock = totalVariantStock.toString();
+    } else {
+      if (!formPrice || Number(formPrice) <= 0) {
+        showToast("Please enter a valid product price.", "error");
+        return;
+      }
+      finalPrice = formPrice.trim();
+      finalStock = (formStock || "0").trim();
     }
-
-    const finalPrice = hasVariants
-      ? Math.min(...resolvedVariants.map((v) => v.price)).toString()
-      : formPrice.trim();
-    const finalStock = hasVariants
-      ? resolvedVariants.reduce((sum, v) => sum + v.stock, 0).toString()
-      : (formStock || "0").trim();
 
     setIsUploading(true);
     let finalImageUrl = formImage.trim();
@@ -508,7 +500,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     formData.append("price", finalPrice);
     formData.append("stock", finalStock);
     formData.append("colors", JSON.stringify(formColors));
-    formData.append("variants", JSON.stringify(hasVariants ? resolvedVariants : []));
+    formData.append("variants", JSON.stringify(hasVariants ? formVariants : []));
     formData.append("image", finalImageUrl);
 
     // If direct upload failed to produce URL and we still have a file, send the single file
@@ -533,7 +525,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                     stock: finalStock,
                     image: finalImageUrl || p.image,
                     colors: formColors,
-                    variants: hasVariants ? resolvedVariants : [],
+                    variants: hasVariants ? formVariants : [],
                   }
                 : p
             )
@@ -1221,17 +1213,13 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                           const nextCat = e.target.value;
                           setFormCategory(nextCat);
                           if (!editingProduct) {
+                            setFormSubCategory("");
                             if (nextCat.toLowerCase() === "perfumes") {
                               setFormColors([]);
-                              setFormVariants([
-                                { label: "50ml", price: Number(formPrice) || 0, stock: Number(formStock) || 20 },
-                                { label: "100ml", price: Number(formPrice) || 0, stock: Number(formStock) || 20 },
-                              ]);
-                              setFormSubCategory("Eau de Parfum (EDP)");
+                              setFormVariants([]);
                             } else if (nextCat.toLowerCase() === "footwear") {
                               setFormColors(["White", "Blue", "Brown", "Mustard", "Peach", "Black"]);
                               setFormVariants([]);
-                              setFormSubCategory("Loafers");
                             }
                           }
                         }
@@ -1375,40 +1363,42 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
 
               {/* 5. Pricing & Variants Section */}
               <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-neutral-50/70 space-y-3.5">
-                {/* Base Price & Default Stock: Always visible */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-                      Base Price (PKR) *
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={formPrice}
-                      onChange={(e) => handleBasePriceChange(e.target.value)}
-                      placeholder="3499"
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
-                    />
-                  </div>
+                {/* Single Price & Stock: Only shown when NO variants are selected */}
+                {!hasVariants && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-1">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+                        Price (PKR) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        value={formPrice}
+                        onChange={(e) => setFormPrice(e.target.value)}
+                        placeholder="3499"
+                        className="w-full px-3.5 py-2 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-                      Default Stock / Size
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formStock}
-                      onChange={(e) => handleBaseStockChange(e.target.value)}
-                      placeholder="20"
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
-                    />
+                    <div>
+                      <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+                        Stock Quantity *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formStock}
+                        onChange={(e) => setFormStock(e.target.value)}
+                        placeholder="20"
+                        className="w-full px-3.5 py-2 text-sm bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-semibold text-neutral-900"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Size Variants Matrix */}
-                <div className="pt-2 border-t border-neutral-200/80 space-y-2.5">
+                <div className={`${!hasVariants ? "pt-2 border-t border-neutral-200/80" : ""} space-y-2.5`}>
                   <div className="flex flex-wrap items-center justify-between gap-1.5">
                     <span className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
                       <span>{isPerfumes ? "Bottle Sizes" : "Shoe Sizes & Variants"}</span>
