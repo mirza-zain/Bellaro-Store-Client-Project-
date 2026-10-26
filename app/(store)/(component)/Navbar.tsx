@@ -53,29 +53,6 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Top Announcement Bar */}
-      <div className="w-full bg-neutral-950 text-neutral-300 text-xs py-2 px-4 flex items-center justify-between border-b border-neutral-800">
-        <div className="hidden sm:flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Karachi Express Shipping & Nationwide Cash on Delivery</span>
-        </div>
-        <div className="w-full sm:w-auto flex items-center justify-center sm:justify-end gap-4 text-[11px] font-medium tracking-wider">
-          <a
-            href="https://www.instagram.com/bellaro.pk/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-white transition inline-flex items-center gap-1.5"
-          >
-            <span>Instagram: @bellaro.pk</span>
-            <span className="text-[10px] text-neutral-400">↗</span>
-          </a>
-          <span className="text-neutral-700 hidden sm:inline">•</span>
-          <Link href="/contact" className="hover:text-white transition hidden sm:inline">
-            Helpline: +92 339 4015589
-          </Link>
-        </div>
-      </div>
-
       <nav className="relative w-full py-3 md:py-4 flex justify-between items-center px-4 md:px-10 z-50 bg-white border-b border-neutral-100 shadow-xs">
         {/* Brand Logo */}
         <div className="md:mx-2">
