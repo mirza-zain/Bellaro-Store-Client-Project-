@@ -72,7 +72,7 @@ export default async function Products({ limit, category }: Prop) {
             key={item.id}
             className="group flex flex-col gap-2 sm:gap-3"
           >
-            <div className="relative w-full aspect-square overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
+            <div className="relative w-full aspect-square overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-50 border border-neutral-200/60 shadow-xs flex items-center justify-center">
               <Image
                 src={
                   item.image && !item.image.includes("/images/img1.jpg")
@@ -84,7 +84,7 @@ export default async function Products({ limit, category }: Prop) {
                 alt={item.name}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
               />
               {Number(item.stock) <= 0 && (
                 <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-neutral-900/90 text-white text-[10px] sm:text-[11px] font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg backdrop-blur-xs">

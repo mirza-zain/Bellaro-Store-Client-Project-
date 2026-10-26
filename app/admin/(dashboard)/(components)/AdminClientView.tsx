@@ -22,9 +22,6 @@ import {
   addProductAction,
   DashboardStats,
   getDashboardData,
-  updateFootwearSizePresetsAction,
-  applySizesToCategoryAction,
-  FootwearSizePresets,
 } from "@/app/lib/actions/admin";
 
 const FOOTWEAR_COLOR_PRESETS = [
@@ -46,14 +43,13 @@ interface AdminClientViewProps {
   stats: DashboardStats;
   products: Product[];
   orders: Order[];
-  initialSizePresets?: FootwearSizePresets;
+  initialSizePresets?: any;
 }
 
 export default function AdminClientView({
   stats,
   products,
   orders,
-  initialSizePresets,
 }: AdminClientViewProps) {
   const router = useRouter();
   const [ordersList, setOrdersList] = useState<Order[]>(orders);
@@ -64,16 +60,6 @@ export default function AdminClientView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-
-  // Dynamic Footwear Size Master states (Adults & Kids)
-  const [adultSizesInput, setAdultSizesInput] = useState(
-    initialSizePresets?.rawAdult || "39, 40, 41, 42, 43, 44, 45"
-  );
-  const [kidsSizesInput, setKidsSizesInput] = useState(
-    initialSizePresets?.rawKids || "31, 32, 33, 34, 35, 36, 37, 38"
-  );
-  const [isSavingSizes, setIsSavingSizes] = useState(false);
-  const [isApplyingSizes, setIsApplyingSizes] = useState(false);
 
   // Quick Add Product Form states
   const [name, setName] = useState("");
@@ -142,10 +128,6 @@ export default function AdminClientView({
           }
           return fresh;
         });
-        if (data.sizePresets && !isModalOpen) {
-          setAdultSizesInput(data.sizePresets.rawAdult);
-          setKidsSizesInput(data.sizePresets.rawKids);
-        }
         setLastSyncedTime(new Date());
         if (manual) {
           showToast("Dashboard synchronized with live store data");
@@ -184,49 +166,6 @@ export default function AdminClientView({
       document.removeEventListener("visibilitychange", onVisibilityOrFocus);
     };
   }, [refreshDashboard]);
-
-  const handleSaveSizePresets = async () => {
-    setIsSavingSizes(true);
-    try {
-      const res = await updateFootwearSizePresetsAction({
-        adultSizes: adultSizesInput,
-        kidsSizes: kidsSizesInput,
-      });
-      if (res.success) {
-        showToast("Footwear size presets saved!");
-      } else {
-        showToast(res.error || "Failed to save sizes.", "error");
-      }
-    } catch {
-      showToast("Failed to save size presets.", "error");
-    } finally {
-      setIsSavingSizes(false);
-    }
-  };
-
-  const handleApplySizesToAll = async (target: "adults" | "kids" | "all") => {
-    if (
-      !confirm(
-        `Apply sizes to ${target.toUpperCase()} footwear in catalog? This sets size variants on matched products.`
-      )
-    ) {
-      return;
-    }
-    setIsApplyingSizes(true);
-    try {
-      const res = await applySizesToCategoryAction({ target });
-      if (res.success) {
-        showToast(`Applied sizes to ${res.count} footwear products!`);
-        refreshDashboard();
-      } else {
-        showToast(res.error || "Failed to apply sizes.", "error");
-      }
-    } catch {
-      showToast("Failed to apply sizes.", "error");
-    } finally {
-      setIsApplyingSizes(false);
-    }
-  };
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -456,103 +395,7 @@ export default function AdminClientView({
         </div>
       </div>
 
-      {/* 3. Dynamic Footwear Size Master Controller */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-neutral-200/80 p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-neutral-100 text-neutral-800 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1">
-              <span>Shoe Size Controller</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-bold text-neutral-900">
-              Footwear Size Presets (Adults &amp; Kids)
-            </h3>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Configure standard shoe sizes once. Save to database or sync to all footwear in catalog.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-            <button
-              type="button"
-              onClick={handleSaveSizePresets}
-              disabled={isSavingSizes}
-              className="px-4 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
-            >
-              {isSavingSizes ? "Saving..." : "Save Sizes"}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleApplySizesToAll("all")}
-              disabled={isApplyingSizes}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
-            >
-              {isApplyingSizes ? "Syncing..." : "Apply to All Footwear"}
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200/60 space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase text-neutral-800 tracking-wider">
-                👞 Adult Shoe Sizes
-              </label>
-              <span className="text-[10px] text-neutral-400 font-mono">Comma-separated</span>
-            </div>
-            <input
-              type="text"
-              value={adultSizesInput}
-              onChange={(e) => setAdultSizesInput(e.target.value)}
-              placeholder="39, 40, 41, 42, 43, 44, 45"
-              className="w-full px-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-xs sm:text-sm font-medium text-neutral-900 focus:outline-hidden focus:border-black"
-            />
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-[11px] text-neutral-500">
-                {adultSizesInput.split(",").filter(Boolean).length} sizes
-              </p>
-              <button
-                type="button"
-                onClick={() => handleApplySizesToAll("adults")}
-                disabled={isApplyingSizes}
-                className="text-[11px] font-semibold text-emerald-700 hover:underline cursor-pointer"
-              >
-                Apply to Adult Shoes &rarr;
-              </button>
-            </div>
-          </div>
-
-          <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200/60 space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase text-neutral-800 tracking-wider">
-                🧒 Kids Shoe Sizes
-              </label>
-              <span className="text-[10px] text-neutral-400 font-mono">Comma-separated</span>
-            </div>
-            <input
-              type="text"
-              value={kidsSizesInput}
-              onChange={(e) => setKidsSizesInput(e.target.value)}
-              placeholder="28, 29, 30, 31, 32, 33, 34, 35"
-              className="w-full px-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-xs sm:text-sm font-medium text-neutral-900 focus:outline-hidden focus:border-black"
-            />
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-[11px] text-neutral-500">
-                {kidsSizesInput.split(",").filter(Boolean).length} sizes
-              </p>
-              <button
-                type="button"
-                onClick={() => handleApplySizesToAll("kids")}
-                disabled={isApplyingSizes}
-                className="text-[11px] font-semibold text-emerald-700 hover:underline cursor-pointer"
-              >
-                Apply to Kids Shoes &rarr;
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Recent Orders Table (Clean & Uncluttered) */}
+      {/* Recent Orders Table (Clean & Uncluttered) */}
       <section className="bg-white rounded-2xl sm:rounded-3xl border border-neutral-200/80 shadow-xs overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
           <div>
@@ -1053,7 +896,7 @@ export default function AdminClientView({
                             isCover ? "border-black shadow-xs ring-2 ring-black/10" : "border-neutral-200"
                           }`}
                         >
-                          <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                          <img src={preview} alt="Preview" className="w-full h-full object-contain p-1" />
                           <span
                             className={`absolute top-1 left-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shadow-xs ${
                               isCover ? "bg-black text-white" : "bg-white/90 text-neutral-700"

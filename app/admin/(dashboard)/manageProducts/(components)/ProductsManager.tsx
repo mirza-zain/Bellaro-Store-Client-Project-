@@ -1831,7 +1831,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                             alt={`Product preview ${slotIdx + 1}`}
                             fill
                             unoptimized
-                            className="object-cover"
+                            className="object-contain p-1"
                           />
                           {/* Slot Label Badge */}
                           <div className="absolute top-1.5 left-1.5 z-10">
