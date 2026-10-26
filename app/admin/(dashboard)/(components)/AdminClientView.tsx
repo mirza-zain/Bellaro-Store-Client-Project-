@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useEffect, useTransition, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -60,6 +60,7 @@ export default function AdminClientView({
   const [productsList, setProductsList] = useState<Product[]>(products);
   const [statsData, setStatsData] = useState<DashboardStats>(stats);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<Date>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -107,26 +108,82 @@ export default function AdminClientView({
     setTimeout(() => setStatusMessage(null), 3500);
   };
 
-  const refreshDashboard = async () => {
-    setIsRefreshing(true);
+  const refreshDashboard = useCallback(async (manual = false) => {
+    if (manual) setIsRefreshing(true);
     try {
       const data = await getDashboardData();
       if (data && data.stats) {
         setStatsData(data.stats);
         setProductsList(data.recentProducts || []);
-        setOrdersList(data.recentOrders || []);
-        if (data.sizePresets) {
+        setOrdersList((prev) => {
+          const fresh = data.recentOrders || [];
+          if (prev.length > 0 && fresh.length > prev.length) {
+            const newest = fresh[0];
+            const newCode = newest?.orderCode || `#ORD-${newest?.id}`;
+            showToast(`🔔 New order arrived: ${newCode} from ${newest?.customerName}!`, "success");
+
+            // Pleasant notification chime via Web Audio API
+            try {
+              const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+              if (AudioCtx) {
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+              }
+            } catch {}
+          }
+          return fresh;
+        });
+        if (data.sizePresets && !isModalOpen) {
           setAdultSizesInput(data.sizePresets.rawAdult);
           setKidsSizesInput(data.sizePresets.rawKids);
         }
-        showToast("Dashboard synchronized with live store data");
+        setLastSyncedTime(new Date());
+        if (manual) {
+          showToast("Dashboard synchronized with live store data");
+        }
       }
-    } catch {
-      showToast("Sync error", "error");
+    } catch (err) {
+      console.warn("Auto-sync error:", err);
+      if (manual) {
+        showToast("Sync error", "error");
+      }
     } finally {
-      setIsRefreshing(false);
+      if (manual) setIsRefreshing(false);
     }
-  };
+  }, [isModalOpen]);
+
+  // Background auto-refresh polling every 8s & instant re-sync on tab focus
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        refreshDashboard(false);
+      }
+    }, 8000);
+
+    const onVisibilityOrFocus = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        refreshDashboard(false);
+      }
+    };
+
+    window.addEventListener("focus", onVisibilityOrFocus);
+    document.addEventListener("visibilitychange", onVisibilityOrFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", onVisibilityOrFocus);
+    };
+  }, [refreshDashboard]);
 
   const handleSaveSizePresets = async () => {
     setIsSavingSizes(true);
@@ -239,15 +296,26 @@ export default function AdminClientView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={refreshDashboard}
-            disabled={isRefreshing}
-            className="p-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl transition cursor-pointer"
-            title="Refresh Store Data"
-          >
-            <RotateCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          </button>
+          <div className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-semibold text-neutral-700">Auto-Refresh</span>
+            <span className="text-neutral-300">•</span>
+            <span className="text-neutral-400 font-mono text-[11px]" suppressHydrationWarning>
+              {lastSyncedTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </span>
+            <button
+              type="button"
+              onClick={() => refreshDashboard(true)}
+              disabled={isRefreshing}
+              className="p-1 hover:bg-neutral-200/60 rounded-md transition text-neutral-500 hover:text-black cursor-pointer"
+              title="Click to refresh dashboard now"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-black" : ""}`} />
+            </button>
+          </div>
           <Link
             href="/admin/manageOrders"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs sm:text-sm font-semibold rounded-xl transition"

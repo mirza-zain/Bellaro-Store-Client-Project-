@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition, useMemo } from "react";
+import React, { useState, useEffect, useTransition, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +12,7 @@ import {
   Minus,
   Package,
   Plus,
+  RotateCw,
   Search,
   Trash2,
   Upload,
@@ -28,6 +29,7 @@ import {
   updateProductAction,
   updateProductStockAction,
   deleteProductAction,
+  getAllProductsAction,
 } from "@/app/lib/actions/admin";
 
 const FOOTWEAR_COLOR_PRESETS = [
@@ -155,6 +157,8 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [stockFilter, setStockFilter] = useState("all");
   const [isPending, startTransition] = useTransition();
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<Date>(new Date());
 
   // Dynamic existing categories derived from current products (defaults to authentic Bellaro categories: Footwear & Perfumes)
   const existingCategories = useMemo(() => {
@@ -207,6 +211,57 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // Live auto-refresh products from database
+  const refreshProducts = useCallback(async (manual = false) => {
+    // If not manual and user is currently typing/editing in a modal, skip background refresh
+    if (!manual && (isAddModalOpen || editingProduct)) {
+      return;
+    }
+
+    if (manual) setIsRefreshing(true);
+    try {
+      const freshProducts = await getAllProductsAction();
+      if (Array.isArray(freshProducts)) {
+        setProductsList(freshProducts);
+        setLastSyncedTime(new Date());
+        if (manual) {
+          showToast("Products catalog synchronized with live database", "success");
+        }
+      }
+    } catch (err) {
+      console.warn("Products auto-sync error:", err);
+      if (manual) {
+        showToast("Failed to refresh products", "error");
+      }
+    } finally {
+      if (manual) setIsRefreshing(false);
+    }
+  }, [isAddModalOpen, editingProduct]);
+
+  // Polling every 8s & re-sync on tab visibility / focus
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        refreshProducts(false);
+      }
+    }, 8000);
+
+    const onVisibilityOrFocus = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        refreshProducts(false);
+      }
+    };
+
+    window.addEventListener("focus", onVisibilityOrFocus);
+    document.addEventListener("visibilitychange", onVisibilityOrFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", onVisibilityOrFocus);
+    };
+  }, [refreshProducts]);
 
   const handleAddCustomColor = () => {
     const val = customColorInput.trim();
@@ -659,13 +714,36 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAddModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-black hover:bg-neutral-800 text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Product</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          <div className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-semibold text-neutral-700">Auto-Refresh</span>
+            <span className="text-neutral-300">•</span>
+            <span className="text-neutral-400 font-mono text-[11px]" suppressHydrationWarning>
+              {lastSyncedTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </span>
+            <button
+              type="button"
+              onClick={() => refreshProducts(true)}
+              disabled={isRefreshing}
+              className="p-1 hover:bg-neutral-200/60 rounded-md transition text-neutral-500 hover:text-black cursor-pointer"
+              title="Click to refresh products now"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-black" : ""}`} />
+            </button>
+          </div>
+
+          <button
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-black hover:bg-neutral-800 text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Product</span>
+          </button>
+        </div>
       </div>
 
       {/* 4 Metric Cards */}
