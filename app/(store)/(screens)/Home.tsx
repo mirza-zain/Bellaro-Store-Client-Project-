@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Sparkles, Truck, RotateCcw, MapPin } from "lucide-react";
 import FeaturedItems from "./FeaturedItems";
+import Reviews from "./Reviews";
 
 export default function HomePage() {
   const quickCategories = [
@@ -78,7 +79,10 @@ export default function HomePage() {
         <FeaturedItems />
       </section>
 
-      {/* 4. Compact Trust Strip */}
+      {/* 4. Curated Customer Impressions (Zarb Minimalist Layout) */}
+      <Reviews />
+
+      {/* 5. Compact Trust Strip */}
       <section className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 pb-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 bg-neutral-50 rounded-2xl p-3.5 sm:p-4 border border-neutral-200/80 text-xs">
           <div className="flex items-center gap-2 text-neutral-700">

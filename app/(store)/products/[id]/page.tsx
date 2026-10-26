@@ -3,11 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, Check, ShieldCheck, Truck, RotateCcw, Star } from "lucide-react";
+import { ArrowLeft, Check, ShieldCheck, Truck, RotateCcw } from "lucide-react";
 import { getProductById } from "@/app/lib/actions/store";
-import { getProductReviews } from "@/app/lib/actions/reviews";
 import ProductPurchaseActions from "./(components)/ProductPurchaseActions";
-import ProductReviewsSection from "./(components)/ProductReviewsSection";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -188,8 +186,6 @@ export default async function ProductDetailPage({ params }: Props) {
     notFound();
   }
 
-  const reviewsSummary = await getProductReviews(productId, product.category, product.name);
-
   const inStock = Number(product.stock) > 0;
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
 
@@ -216,15 +212,6 @@ export default async function ProductDetailPage({ params }: Props) {
         name: "Bellaro",
       },
     },
-    ...(reviewsSummary.totalReviews > 0
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: reviewsSummary.averageRating.toFixed(1),
-            reviewCount: reviewsSummary.totalReviews,
-          },
-        }
-      : {}),
   };
 
   return (
@@ -267,27 +254,6 @@ export default async function ProductDetailPage({ params }: Props) {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 mt-2">
               {product.name}
             </h1>
-            <div className="flex items-center gap-2 mt-2.5">
-              <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star
-                    key={s}
-                    className={`w-4 h-4 ${
-                      s <= Math.round(reviewsSummary.averageRating)
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-neutral-200"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs font-bold text-neutral-900">
-                {reviewsSummary.totalReviews > 0 ? reviewsSummary.averageRating.toFixed(1) : "5.0"}
-              </span>
-              <span className="text-xs text-neutral-400">
-                ({reviewsSummary.totalReviews}{" "}
-                {reviewsSummary.totalReviews === 1 ? "verified review" : "verified reviews"})
-              </span>
-            </div>
             <p className="text-2xl sm:text-3xl font-bold text-neutral-900 mt-3">
               PKR {Number(product.price).toLocaleString()}
             </p>
@@ -347,13 +313,6 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
-
-      {/* Verified Customer Reviews Section */}
-      <ProductReviewsSection
-        productId={product.id}
-        productName={product.name}
-        summary={reviewsSummary}
-      />
     </div>
   );
 }
