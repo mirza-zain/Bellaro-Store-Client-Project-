@@ -46,17 +46,14 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Clean Desktop Navigation: Home | Footwear | Perfumes | Track | Contact */}
+        {/* Clean Desktop Navigation: Home | Shop | Track | Contact */}
         <div className="hidden md:flex">
           <ul className="flex justify-center items-center gap-8 lg:gap-10">
             <li className="text-sm font-semibold uppercase tracking-wider text-neutral-800 hover:text-black transition">
               <Link href="/">Home</Link>
             </li>
             <li className="text-sm font-semibold uppercase tracking-wider text-neutral-800 hover:text-black transition">
-              <Link href="/products?category=Footwear">Footwear</Link>
-            </li>
-            <li className="text-sm font-semibold uppercase tracking-wider text-neutral-800 hover:text-black transition">
-              <Link href="/products?category=Perfumes">Perfumes</Link>
+              <Link href="/products">Shop</Link>
             </li>
             <li className="text-sm font-semibold uppercase tracking-wider text-neutral-800 hover:text-black transition">
               <Link href="/track">Track</Link>
@@ -154,20 +151,11 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    href="/products?category=Footwear"
+                    href="/products"
                     onClick={() => setMenuOpen(false)}
                     className="text-2xl font-bold tracking-wider uppercase hover:opacity-70 transition-opacity"
                   >
-                    Footwear
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/products?category=Perfumes"
-                    onClick={() => setMenuOpen(false)}
-                    className="text-2xl font-bold tracking-wider uppercase hover:opacity-70 transition-opacity"
-                  >
-                    Perfumes
+                    Shop
                   </Link>
                 </li>
                 <li>
@@ -176,7 +164,7 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className="text-2xl font-bold tracking-wider uppercase hover:opacity-70 transition-opacity"
                   >
-                    Track Order
+                    Track
                   </Link>
                 </li>
                 <li>
@@ -185,7 +173,7 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                     className="text-2xl font-bold tracking-wider uppercase hover:opacity-70 transition-opacity"
                   >
-                    Contact Us
+                    Contact
                   </Link>
                 </li>
               </ul>
