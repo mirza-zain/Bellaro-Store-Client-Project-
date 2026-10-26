@@ -194,6 +194,26 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   const inStock = Number(product.stock) > 0;
+
+  let audienceBadge: string | null = null;
+  if (product.category?.toLowerCase() === "footwear") {
+    const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+    const hasKids = rawVariants.some((v: any) => {
+      const num = parseInt(String(v?.label || "").replace(/\D/g, ""), 10);
+      return !isNaN(num) && num >= 28 && num <= 38;
+    });
+    const hasAdults = rawVariants.some((v: any) => {
+      const num = parseInt(String(v?.label || "").replace(/\D/g, ""), 10);
+      return !isNaN(num) && num >= 39 && num <= 48;
+    });
+    if (hasKids && hasAdults) {
+      audienceBadge = "Adults & Kids (31–45)";
+    } else if (hasKids) {
+      audienceBadge = "🧒 Kids (31–38)";
+    } else if (hasAdults) {
+      audienceBadge = "👞 Adults (39–45)";
+    }
+  }
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
 
   const productJsonLd = {
@@ -254,10 +274,18 @@ export default async function ProductDetailPage({ params }: Props) {
         {/* Product Info & Purchase Form */}
         <div className="flex flex-col gap-6">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-400 uppercase tracking-widest">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-400 uppercase tracking-widest">
               <span>{product.category}</span>
               <span>•</span>
               <span>{product.subCategory}</span>
+              {audienceBadge && (
+                <>
+                  <span>•</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-900 font-bold normal-case tracking-normal text-[11px]">
+                    {audienceBadge}
+                  </span>
+                </>
+              )}
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 mt-2">
               {product.name}

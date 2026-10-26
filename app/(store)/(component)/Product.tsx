@@ -100,6 +100,44 @@ export default async function Products({ limit, category }: Prop) {
                 <span>{item.category}</span>
                 <span>•</span>
                 <span>{item.subCategory}</span>
+                {item.category?.toLowerCase() === "footwear" && (item as any).variants && (item as any).variants.length > 0 && (
+                  (() => {
+                    const rawVariants: any[] = (item as any).variants || [];
+                    const hasKids = rawVariants.some((v) => {
+                      const num = parseInt(String(v.label).replace(/\D/g, ""), 10);
+                      return !isNaN(num) && num >= 28 && num <= 38;
+                    });
+                    const hasAdults = rawVariants.some((v) => {
+                      const num = parseInt(String(v.label).replace(/\D/g, ""), 10);
+                      return !isNaN(num) && num >= 39 && num <= 48;
+                    });
+                    if (hasKids && hasAdults) {
+                      return (
+                        <>
+                          <span>•</span>
+                          <span className="text-neutral-700 font-bold normal-case">Adult &amp; Kids</span>
+                        </>
+                      );
+                    }
+                    if (hasKids) {
+                      return (
+                        <>
+                          <span>•</span>
+                          <span className="text-amber-800 font-bold normal-case">🧒 Kids</span>
+                        </>
+                      );
+                    }
+                    if (hasAdults) {
+                      return (
+                        <>
+                          <span>•</span>
+                          <span className="text-neutral-700 font-bold normal-case">👞 Adults</span>
+                        </>
+                      );
+                    }
+                    return null;
+                  })()
+                )}
               </div>
               <p className="text-xs sm:text-sm md:text-base font-bold text-neutral-900 mt-1">
                 PKR {Number(item.price).toLocaleString()}

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Check, Minus, Plus, ShoppingBag, ArrowRight } from "lucide-react";
+import { Check, Minus, Plus, ShoppingBag, ArrowRight, Ruler, X } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import { ProductVariant } from "@/app/db/schema";
 
@@ -102,6 +102,61 @@ export default function ProductPurchaseActions({
     router.push("/checkout");
   };
 
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const isFootwear = category?.toLowerCase() === "footwear";
+
+  const isKidsShoeSize = (label: string) => {
+    const num = parseInt(label.replace(/\D/g, ""), 10);
+    return !isNaN(num) && num >= 28 && num <= 38;
+  };
+
+  const isAdultShoeSize = (label: string) => {
+    const num = parseInt(label.replace(/\D/g, ""), 10);
+    return !isNaN(num) && num >= 39 && num <= 48;
+  };
+
+  const kidsVariants = isFootwear ? variants.filter((v) => isKidsShoeSize(v.label)) : [];
+  const adultVariants = isFootwear ? variants.filter((v) => isAdultShoeSize(v.label)) : [];
+  const otherVariants = isFootwear
+    ? variants.filter((v) => !isKidsShoeSize(v.label) && !isAdultShoeSize(v.label))
+    : variants;
+
+  const renderVariantButton = (v: ProductVariant, i: number) => {
+    const isSelected = selectedVariant === v.label;
+    const vStock = Number(v.stock) || 0;
+    const isVOutOfStock = vStock <= 0;
+
+    return (
+      <button
+        key={`${v.label}-${i}`}
+        type="button"
+        onClick={() => {
+          setSelectedVariant(v.label);
+          if (quantity > vStock && vStock > 0) {
+            setQuantity(vStock);
+          }
+        }}
+        className={`px-3.5 sm:px-4 py-2 border rounded-xl text-xs sm:text-sm font-medium transition cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 max-w-full min-h-[42px] touch-manipulation ${
+          isSelected
+            ? "border-black bg-black text-white shadow-xs"
+            : isVOutOfStock
+            ? "border-neutral-200 text-neutral-400 bg-neutral-50 hover:border-neutral-300"
+            : "border-neutral-200 text-neutral-800 hover:border-neutral-400 bg-white"
+        }`}
+      >
+        <span className="font-semibold">{v.label}</span>
+        {Number(v.price) !== price && (
+          <span className={`text-[11px] sm:text-xs shrink-0 ${isSelected ? "text-neutral-300" : "text-neutral-500"}`}>
+            PKR {Number(v.price).toLocaleString()}
+          </span>
+        )}
+        {isVOutOfStock && (
+          <span className="text-[10px] text-rose-500 font-bold uppercase shrink-0">(Sold Out)</span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Color Selection (Leather / Shade) */}
@@ -155,54 +210,113 @@ export default function ProductPurchaseActions({
 
       {/* Variants Selection */}
       {variants && variants.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold uppercase text-neutral-700">
-              Select Variant / Size
-            </label>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold uppercase text-neutral-700">
+                {isFootwear ? "Select Shoe Size" : "Select Variant / Volume"}
+              </label>
+              {isFootwear && (
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(!showSizeGuide)}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-600 hover:text-black underline cursor-pointer"
+                >
+                  <Ruler className="w-3 h-3" />
+                  <span>Size Guide</span>
+                </button>
+              )}
+            </div>
             {selectedVariant && (
               <span className="text-xs text-neutral-500 font-medium">
                 Selected: <strong className="text-black">{selectedVariant}</strong>
               </span>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {variants.map((v, i) => {
-              const isSelected = selectedVariant === v.label;
-              const vStock = Number(v.stock) || 0;
-              const isVOutOfStock = vStock <= 0;
 
-              return (
+          {/* Size Guide Info Drawer */}
+          {showSizeGuide && isFootwear && (
+            <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-2xl text-xs space-y-2 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between font-bold text-neutral-900">
+                <span className="flex items-center gap-1.5">
+                  <Ruler className="w-3.5 h-3.5 text-neutral-700" />
+                  <span>Footwear Size Guide (Pakistan / EU Scale)</span>
+                </span>
                 <button
-                  key={i}
                   type="button"
-                  onClick={() => {
-                    setSelectedVariant(v.label);
-                    if (quantity > vStock && vStock > 0) {
-                      setQuantity(vStock);
-                    }
-                  }}
-                  className={`px-3.5 sm:px-4 py-2 border rounded-xl text-xs sm:text-sm font-medium transition cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 max-w-full min-h-[42px] touch-manipulation ${
-                    isSelected
-                      ? "border-black bg-black text-white shadow-xs"
-                      : isVOutOfStock
-                      ? "border-neutral-200 text-neutral-400 bg-neutral-50 hover:border-neutral-300"
-                      : "border-neutral-200 text-neutral-800 hover:border-neutral-400 bg-white"
-                  }`}
+                  onClick={() => setShowSizeGuide(false)}
+                  className="p-1 text-neutral-400 hover:text-black rounded"
                 >
-                  <span className="font-semibold">{v.label}</span>
-                  {Number(v.price) !== price && (
-                    <span className={`text-[11px] sm:text-xs shrink-0 ${isSelected ? "text-neutral-300" : "text-neutral-500"}`}>
-                      PKR {Number(v.price).toLocaleString()}
-                    </span>
-                  )}
-                  {isVOutOfStock && (
-                    <span className="text-[10px] text-rose-500 font-bold uppercase shrink-0">(Sold Out)</span>
-                  )}
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              );
-            })}
-          </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="p-2.5 bg-white rounded-xl border border-neutral-200/80">
+                  <p className="font-bold text-amber-800">🧒 Kids Sizes (31 to 38)</p>
+                  <p className="text-neutral-500 mt-0.5">
+                    For boys &amp; girls approx. 6–13 years. Insole length approx 19.5cm – 24.5cm.
+                  </p>
+                </div>
+                <div className="p-2.5 bg-white rounded-xl border border-neutral-200/80">
+                  <p className="font-bold text-neutral-900">👞 Adult Sizes (39 to 45)</p>
+                  <p className="text-neutral-500 mt-0.5">
+                    Standard adult fit (EU 39 = UK 6, EU 40 = UK 7 up to EU 45 = UK 11).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Grouped Footwear Sizes vs Standard Variants */}
+          {isFootwear && (kidsVariants.length > 0 || adultVariants.length > 0) ? (
+            <div className="space-y-3">
+              {/* Kids Sizes Section */}
+              {kidsVariants.length > 0 && (
+                <div className="p-3 bg-amber-50/50 rounded-2xl border border-amber-200/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-amber-900">
+                      <span>🧒 Kids Sizes (31 to 38)</span>
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-medium">Children / Junior</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {kidsVariants.map(renderVariantButton)}
+                  </div>
+                </div>
+              )}
+
+              {/* Adult Sizes Section */}
+              {adultVariants.length > 0 && (
+                <div className="p-3 bg-neutral-50/70 rounded-2xl border border-neutral-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-neutral-900">
+                      <span>👞 Adult Sizes (39 to 45)</span>
+                    </span>
+                    <span className="text-[10px] text-neutral-500 font-medium">Standard Adult</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {adultVariants.map(renderVariantButton)}
+                  </div>
+                </div>
+              )}
+
+              {/* Other Sizes Section (if any) */}
+              {otherVariants.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                    Additional Sizes
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {otherVariants.map(renderVariantButton)}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {variants.map(renderVariantButton)}
+            </div>
+          )}
 
           {/* Active variant dynamic price & status indicator */}
           {activeVariant && (

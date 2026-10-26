@@ -42,6 +42,7 @@ export default function ShopFilterView({
   const [sortBy, setSortBy] = useState("featured");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [priceBracket, setPriceBracket] = useState<"all" | "under-3000" | "3000-6000" | "over-6000">("all");
+  const [audienceFilter, setAudienceFilter] = useState<"all" | "adults" | "kids">("all");
 
   // Filter Drawer & Sidebar visibility state
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -128,6 +129,29 @@ export default function ShopFilterView({
       result = result.filter((p) => Number(p.price) > 6000);
     }
 
+    // Audience filter (Adults vs Kids for footwear)
+    if (audienceFilter !== "all") {
+      result = result.filter((p) => {
+        if (p.category?.toLowerCase() !== "footwear") return false;
+        const variants = Array.isArray(p.variants) ? p.variants : [];
+        if (variants.length === 0) return true;
+
+        if (audienceFilter === "kids") {
+          return variants.some((v) => {
+            const num = parseInt(v.label.replace(/\D/g, ""), 10);
+            return !isNaN(num) && num >= 28 && num <= 38;
+          });
+        }
+        if (audienceFilter === "adults") {
+          return variants.some((v) => {
+            const num = parseInt(v.label.replace(/\D/g, ""), 10);
+            return !isNaN(num) && num >= 39 && num <= 48;
+          });
+        }
+        return true;
+      });
+    }
+
     // Search query
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
@@ -161,6 +185,7 @@ export default function ShopFilterView({
     selectedSubCategory,
     inStockOnly,
     priceBracket,
+    audienceFilter,
     searchQuery,
     sortBy,
   ]);
@@ -168,7 +193,7 @@ export default function ShopFilterView({
   // Reset pagination to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, selectedSubCategory, searchQuery, sortBy, inStockOnly, priceBracket, itemsPerPage]);
+  }, [selectedCategory, selectedSubCategory, searchQuery, sortBy, inStockOnly, priceBracket, audienceFilter, itemsPerPage]);
 
   // Total pages
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
@@ -188,8 +213,9 @@ export default function ShopFilterView({
     if (sortBy !== "featured") count++;
     if (inStockOnly) count++;
     if (priceBracket !== "all") count++;
+    if (audienceFilter !== "all") count++;
     return count;
-  }, [selectedCategory, selectedSubCategory, searchQuery, sortBy, inStockOnly, priceBracket]);
+  }, [selectedCategory, selectedSubCategory, searchQuery, sortBy, inStockOnly, priceBracket, audienceFilter]);
 
   const handleCategoryChange = (cat: string) => {
     setSelectedCategory(cat);
@@ -203,6 +229,7 @@ export default function ShopFilterView({
     setSortBy("featured");
     setInStockOnly(false);
     setPriceBracket("all");
+    setAudienceFilter("all");
     setCategorySearch("");
     setCurrentPage(1);
   };
@@ -352,6 +379,46 @@ export default function ShopFilterView({
           </div>
         </div>
       )}
+
+      {/* Target Sizing Filter (Adults vs Kids) */}
+      <div className="pt-4 border-t border-neutral-200">
+        <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+          <span>Target Sizing</span>
+          {audienceFilter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setAudienceFilter("all")}
+              className="text-[10px] text-neutral-400 hover:text-black font-normal cursor-pointer"
+            >
+              Reset
+            </button>
+          )}
+        </h4>
+        <div className="space-y-1">
+          {[
+            { id: "all", label: "All Sizing" },
+            { id: "adults", label: "👞 Adults (39–45)" },
+            { id: "kids", label: "🧒 Kids (31–38)" },
+          ].map((item) => {
+            const isSelected = audienceFilter === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setAudienceFilter(item.id as any)}
+                className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer text-left ${
+                  isSelected
+                    ? "bg-neutral-900 text-white"
+                    : "text-neutral-600 hover:bg-neutral-100"
+                }`}
+              >
+                <span>{item.label}</span>
+                {isSelected && <Check className="w-3.5 h-3.5" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Price Range Filter */}
       <div className="pt-4 border-t border-neutral-200">
@@ -736,11 +803,41 @@ export default function ShopFilterView({
                         <p className="font-bold text-neutral-900 text-base">
                           PKR {Number(item.price).toLocaleString()}
                         </p>
-                        {item.variants && item.variants.length > 0 && (
+                        {item.category?.toLowerCase() === "footwear" && item.variants && item.variants.length > 0 ? (
+                          (() => {
+                            const hasKids = item.variants.some((v) => {
+                              const num = parseInt(v.label.replace(/\D/g, ""), 10);
+                              return !isNaN(num) && num >= 28 && num <= 38;
+                            });
+                            const hasAdults = item.variants.some((v) => {
+                              const num = parseInt(v.label.replace(/\D/g, ""), 10);
+                              return !isNaN(num) && num >= 39 && num <= 48;
+                            });
+                            if (hasKids && hasAdults) {
+                              return (
+                                <span className="text-[10px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md">
+                                  Adult &amp; Kids ({item.variants.length})
+                                </span>
+                              );
+                            }
+                            if (hasKids) {
+                              return (
+                                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                                  🧒 Kids ({item.variants.length})
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="text-[10px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md">
+                                👞 Adults ({item.variants.length})
+                              </span>
+                            );
+                          })()
+                        ) : item.variants && item.variants.length > 0 ? (
                           <span className="text-[11px] font-medium text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-md">
-                            {item.variants.length} sizes
+                            {item.variants.length} options
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </Link>
