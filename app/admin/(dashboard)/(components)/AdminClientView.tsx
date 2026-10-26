@@ -28,15 +28,18 @@ import {
 } from "@/app/lib/actions/admin";
 
 const FOOTWEAR_COLOR_PRESETS = [
+  { name: "White", hex: "#ffffff" },
+  { name: "Blue", hex: "#2563eb" },
+  { name: "Brown", hex: "#5c4033" },
+  { name: "Mustard", hex: "#e1ad01" },
+  { name: "Peach", hex: "#fba476" },
   { name: "Black", hex: "#171717" },
   { name: "Dark Brown", hex: "#3e2723" },
-  { name: "Classic Tan", hex: "#b87333" },
-  { name: "Burgundy Oxblood", hex: "#6b1426" },
+  { name: "Tan", hex: "#b87333" },
   { name: "Navy Blue", hex: "#1a2a44" },
   { name: "Olive Green", hex: "#556b2f" },
   { name: "Charcoal Grey", hex: "#4b5563" },
-  { name: "White", hex: "#f5f5f4" },
-  { name: "Camel", hex: "#c19a6b" },
+  { name: "Burgundy", hex: "#6b1426" },
 ];
 
 interface AdminClientViewProps {
@@ -66,7 +69,7 @@ export default function AdminClientView({
     initialSizePresets?.rawAdult || "39, 40, 41, 42, 43, 44, 45"
   );
   const [kidsSizesInput, setKidsSizesInput] = useState(
-    initialSizePresets?.rawKids || "28, 29, 30, 31, 32, 33, 34, 35"
+    initialSizePresets?.rawKids || "31, 32, 33, 34, 35, 36, 37, 38"
   );
   const [isSavingSizes, setIsSavingSizes] = useState(false);
   const [isApplyingSizes, setIsApplyingSizes] = useState(false);
@@ -657,53 +660,112 @@ export default function AdminClientView({
 
               {/* Footwear Sizes */}
               {category === "Footwear" && (
-                <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className="border border-neutral-200 rounded-2xl p-3 bg-neutral-50/70 space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
                     <label className="block text-xs font-semibold uppercase text-neutral-700">
                       Shoe Sizes ({selectedSizes.length} selected)
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => setSelectedSizes(["39", "40", "41", "42", "43", "44", "45"])}
-                        className="text-[10px] text-neutral-700 hover:text-black underline cursor-pointer"
+                        onClick={() => setSelectedSizes(["39", "40", "41", "42", "43", "44"])}
+                        className="px-1.5 py-0.5 text-[10px] font-semibold bg-white border border-neutral-200 rounded text-neutral-700 hover:text-black hover:border-black cursor-pointer"
+                        title="Select adult sizes 39 to 44"
                       >
-                        All Adults
+                        + 39–44
                       </button>
                       <button
                         type="button"
-                        onClick={() => setSelectedSizes([])}
-                        className="text-[10px] text-rose-600 hover:underline cursor-pointer"
+                        onClick={() => setSelectedSizes(["40", "41", "42", "43", "44", "45"])}
+                        className="px-1.5 py-0.5 text-[10px] font-semibold bg-white border border-neutral-200 rounded text-neutral-700 hover:text-black hover:border-black cursor-pointer"
+                        title="Select adult sizes 40 to 45"
                       >
-                        Clear
+                        + 40–45
                       </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedSizes(["31", "32", "33", "34", "35", "36", "37", "38"])
+                        }
+                        className="px-1.5 py-0.5 text-[10px] font-semibold bg-white border border-neutral-200 rounded text-neutral-700 hover:text-black hover:border-black cursor-pointer"
+                        title="Select kids sizes 31 to 38"
+                      >
+                        + Kids (31–38)
+                      </button>
+                      {selectedSizes.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSizes([])}
+                          className="text-[10px] text-rose-600 hover:underline cursor-pointer ml-1"
+                        >
+                          Clear
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1">
-                    {["39", "40", "41", "42", "43", "44", "45"].map((sz) => {
-                      const isSelected = selectedSizes.includes(sz);
-                      return (
-                        <button
-                          key={sz}
-                          type="button"
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedSizes(selectedSizes.filter((s) => s !== sz));
-                            } else {
-                              setSelectedSizes([...selectedSizes, sz]);
-                            }
-                          }}
-                          className={`w-8 h-7 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
-                            isSelected
-                              ? "bg-black text-white border-black font-semibold"
-                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
-                          }`}
-                        >
-                          {sz}
-                        </button>
-                      );
-                    })}
+                  {/* Adults Chips */}
+                  <div>
+                    <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-1">
+                      Adults (39–45):
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {["39", "40", "41", "42", "43", "44", "45"].map((sz) => {
+                        const isSelected = selectedSizes.includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedSizes(selectedSizes.filter((s) => s !== sz));
+                              } else {
+                                setSelectedSizes([...selectedSizes, sz]);
+                              }
+                            }}
+                            className={`w-8 h-7 rounded-lg text-xs font-bold border transition cursor-pointer flex items-center justify-center ${
+                              isSelected
+                                ? "bg-black text-white border-black font-semibold"
+                                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Kids Chips */}
+                  <div>
+                    <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-1">
+                      Kids (31–38):
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {["31", "32", "33", "34", "35", "36", "37", "38"].map((sz) => {
+                        const isSelected = selectedSizes.includes(sz);
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedSizes(selectedSizes.filter((s) => s !== sz));
+                              } else {
+                                setSelectedSizes([...selectedSizes, sz]);
+                              }
+                            }}
+                            className={`w-8 h-7 rounded-lg text-[11px] font-bold border transition cursor-pointer flex items-center justify-center ${
+                              isSelected
+                                ? "bg-black text-white border-black font-semibold"
+                                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}

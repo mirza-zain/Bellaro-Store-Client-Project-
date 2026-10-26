@@ -241,7 +241,7 @@ export async function ensureTablesExist() {
       INSERT INTO store_settings (key, value)
       VALUES 
         ('adult_footwear_sizes', '39, 40, 41, 42, 43, 44, 45'),
-        ('kids_footwear_sizes', '28, 29, 30, 31, 32, 33, 34, 35')
+        ('kids_footwear_sizes', '31, 32, 33, 34, 35, 36, 37, 38')
       ON CONFLICT (key) DO NOTHING;
     `);
 
@@ -267,7 +267,7 @@ export async function getFootwearSizePresets(): Promise<FootwearSizePresets> {
     const kidsRow = rows.find((r) => r.key === "kids_footwear_sizes");
 
     const rawAdult = adultRow?.value || "39, 40, 41, 42, 43, 44, 45";
-    const rawKids = kidsRow?.value || "28, 29, 30, 31, 32, 33, 34, 35";
+    const rawKids = kidsRow?.value || "31, 32, 33, 34, 35, 36, 37, 38";
 
     const adultSizes = rawAdult.split(",").map((s) => s.trim()).filter(Boolean);
     const kidsSizes = rawKids.split(",").map((s) => s.trim()).filter(Boolean);
@@ -277,9 +277,9 @@ export async function getFootwearSizePresets(): Promise<FootwearSizePresets> {
     console.warn("Using default footwear size presets:", e);
     return {
       adultSizes: ["39", "40", "41", "42", "43", "44", "45"],
-      kidsSizes: ["28", "29", "30", "31", "32", "33", "34", "35"],
+      kidsSizes: ["31", "32", "33", "34", "35", "36", "37", "38"],
       rawAdult: "39, 40, 41, 42, 43, 44, 45",
-      rawKids: "28, 29, 30, 31, 32, 33, 34, 35",
+      rawKids: "31, 32, 33, 34, 35, 36, 37, 38",
     };
   }
 }
@@ -293,7 +293,7 @@ export async function updateFootwearSizePresetsAction(input: {
     await ensureTablesExist();
 
     const cleanAdult = input.adultSizes.trim() || "39, 40, 41, 42, 43, 44, 45";
-    const cleanKids = input.kidsSizes.trim() || "28, 29, 30, 31, 32, 33, 34, 35";
+    const cleanKids = input.kidsSizes.trim() || "31, 32, 33, 34, 35, 36, 37, 38";
 
     await db.insert(storeSettings).values({
       key: "adult_footwear_sizes",

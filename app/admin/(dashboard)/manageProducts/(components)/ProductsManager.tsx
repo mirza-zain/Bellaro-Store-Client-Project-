@@ -31,19 +31,24 @@ import {
 } from "@/app/lib/actions/admin";
 
 const FOOTWEAR_COLOR_PRESETS = [
+  { name: "White", hex: "#ffffff" },
+  { name: "Blue", hex: "#2563eb" },
+  { name: "Brown", hex: "#5c4033" },
+  { name: "Mustard", hex: "#e1ad01" },
+  { name: "Peach", hex: "#fba476" },
   { name: "Black", hex: "#171717" },
   { name: "Dark Brown", hex: "#3e2723" },
-  { name: "Classic Tan", hex: "#b87333" },
-  { name: "Burgundy Oxblood", hex: "#6b1426" },
+  { name: "Tan", hex: "#b87333" },
   { name: "Navy Blue", hex: "#1a2a44" },
   { name: "Olive Green", hex: "#556b2f" },
   { name: "Charcoal Grey", hex: "#4b5563" },
-  { name: "White", hex: "#f5f5f4" },
-  { name: "Camel", hex: "#c19a6b" },
+  { name: "Burgundy", hex: "#6b1426" },
 ];
 
 const ADULT_SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
-const KIDS_SHOE_SIZES = ["28", "29", "30", "31", "32", "33", "34", "35"];
+const ADULT_SIZES_39_44 = ["39", "40", "41", "42", "43", "44"];
+const ADULT_SIZES_40_45 = ["40", "41", "42", "43", "44", "45"];
+const KIDS_SHOE_SIZES = ["31", "32", "33", "34", "35", "36", "37", "38"];
 
 interface ProductsManagerProps {
   initialProducts: Product[];
@@ -296,6 +301,30 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
         { label: norm, price: defaultPrice, stock: defaultStock },
       ]);
     }
+  };
+
+  const handleSelectAdults39to44 = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = ADULT_SIZES_39_44
+        .filter((s) => !existingLabels.has(s.toUpperCase()))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
+  };
+
+  const handleSelectAdults40to45 = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = ADULT_SIZES_40_45
+        .filter((s) => !existingLabels.has(s.toUpperCase()))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
   };
 
   const handleSelectAllAdultSizes = () => {
@@ -1345,20 +1374,30 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                       )}
                     </span>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={handleSelectAllAdultSizes}
-                        className="text-[11px] font-semibold text-neutral-700 hover:text-black underline cursor-pointer"
+                        onClick={handleSelectAdults39to44}
+                        className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                        title="Select adult sizes 39 to 44"
                       >
-                        + All Adults (39–45)
+                        + Adults (39–44)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSelectAdults40to45}
+                        className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                        title="Select adult sizes 40 to 45"
+                      >
+                        + Adults (40–45)
                       </button>
                       <button
                         type="button"
                         onClick={handleSelectAllKidsSizes}
-                        className="text-[11px] font-semibold text-neutral-700 hover:text-black underline cursor-pointer"
+                        className="px-2 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:text-black hover:border-black transition cursor-pointer"
+                        title="Select kids sizes 31 to 38"
                       >
-                        + Kids
+                        + Kids (31–38)
                       </button>
                       {hasVariants && (
                         <button
@@ -1375,7 +1414,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                   {/* Size Toggle Chips */}
                   <div className="space-y-2 pt-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Adults:</span>
+                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Adults (39–45):</span>
                       {ADULT_SHOE_SIZES.map((sz) => {
                         const isSelected = formVariants.some(
                           (v) => v.label.toUpperCase().trim() === sz.toUpperCase()
@@ -1398,7 +1437,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                     </div>
 
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Kids:</span>
+                      <span className="text-[11px] text-neutral-500 font-medium mr-1 shrink-0">Kids (31–38):</span>
                       {KIDS_SHOE_SIZES.map((sz) => {
                         const isSelected = formVariants.some(
                           (v) => v.label.toUpperCase().trim() === sz.toUpperCase()

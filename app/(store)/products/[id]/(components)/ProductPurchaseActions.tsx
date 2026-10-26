@@ -21,14 +21,18 @@ interface Props {
 const getColorHex = (name: string): string => {
   const n = name.toLowerCase();
   if (n.includes("black")) return "#171717";
+  if (n.includes("white")) return "#ffffff";
+  if (n.includes("mustard")) return "#e1ad01";
+  if (n.includes("peach")) return "#fba476";
   if (n.includes("dark brown") || n.includes("chocolate") || n.includes("coffee")) return "#3e2723";
   if (n.includes("brown")) return "#5d4037";
   if (n.includes("tan") || n.includes("camel") || n.includes("cognac")) return "#b87333";
   if (n.includes("burgundy") || n.includes("oxblood") || n.includes("maroon")) return "#6b1426";
-  if (n.includes("navy") || n.includes("blue")) return "#1a2a44";
+  if (n.includes("navy")) return "#1a2a44";
+  if (n.includes("blue")) return "#2563eb";
   if (n.includes("olive") || n.includes("green")) return "#556b2f";
   if (n.includes("charcoal") || n.includes("grey") || n.includes("gray")) return "#4b5563";
-  if (n.includes("white") || n.includes("beige") || n.includes("cream")) return "#f5f5f4";
+  if (n.includes("beige") || n.includes("cream")) return "#f5f5f4";
   return "#262626";
 };
 
@@ -117,7 +121,11 @@ export default function ProductPurchaseActions({
             {colors.map((c) => {
               const isSelected = selectedColor === c;
               const swatchHex = getColorHex(c);
-              const isLight = swatchHex === "#f5f5f4";
+              const isLight =
+                swatchHex === "#ffffff" ||
+                swatchHex === "#f5f5f4" ||
+                swatchHex === "#fba476" ||
+                swatchHex === "#e1ad01";
 
               return (
                 <button
