@@ -244,6 +244,19 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     });
   };
 
+  const handleQuickAddKidsSizes = () => {
+    const defaultPrice = Number(formPrice) || 0;
+    const defaultStock = Number(formStock) || 10;
+    const sizes = ["28", "29", "30", "31", "32", "33", "34", "35"];
+    setFormVariants((prev) => {
+      const existingLabels = new Set(prev.map((v) => v.label.toUpperCase().trim()));
+      const toAdd = sizes
+        .filter((s) => !existingLabels.has(s))
+        .map((s) => ({ label: s, price: defaultPrice, stock: defaultStock }));
+      return [...prev, ...toAdd];
+    });
+  };
+
   const handleQuickAddPerfumeSizes = () => {
     const defaultPrice = Number(formPrice) || 0;
     const defaultStock = Number(formStock) || 10;
@@ -1164,7 +1177,14 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                         onClick={handleQuickAddShoeSizes}
                         className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
                       >
-                        + EUR 39–45 (Shoes)
+                        + Adults (39–45)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleQuickAddKidsSizes}
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-neutral-200 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:border-neutral-300 transition cursor-pointer"
+                      >
+                        + Kids (28–35)
                       </button>
                       <button
                         type="button"

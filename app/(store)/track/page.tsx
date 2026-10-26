@@ -25,7 +25,6 @@ import {
   X,
 } from "lucide-react";
 import { trackOrderAction } from "@/app/lib/actions/orderTracking";
-import { submitProductReviewAction } from "@/app/lib/actions/reviews";
 import { Order, OrderItem } from "@/app/db/schema";
 
 function TrackOrderContent() {
@@ -45,16 +44,6 @@ function TrackOrderContent() {
       setTimeout(() => setCopiedTrackingId(false), 2000);
     }
   };
-
-  // Review modal state
-  const [reviewItem, setReviewItem] = useState<{ item: OrderItem; order: Order } | null>(null);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewHoverRating, setReviewHoverRating] = useState<number | null>(null);
-  const [reviewTitle, setReviewTitle] = useState("");
-  const [reviewComment, setReviewComment] = useState("");
-  const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
-  const [reviewError, setReviewError] = useState<string | null>(null);
-  const [isReviewPending, startReviewTransition] = useTransition();
 
   const performSearch = (searchVal: string) => {
     if (!searchVal.trim()) return;
@@ -100,35 +89,6 @@ function TrackOrderContent() {
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
     performSearch(query);
-  };
-
-  const handleReviewSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reviewItem) return;
-    setReviewError(null);
-    setReviewSuccess(null);
-
-    startReviewTransition(async () => {
-      const res = await submitProductReviewAction({
-        productId: reviewItem.item.productId,
-        orderId: reviewItem.order.id,
-        customerName: reviewItem.order.customerName,
-        customerEmail: reviewItem.order.customerEmail,
-        rating: reviewRating,
-        title: reviewTitle,
-        comment: reviewComment,
-      });
-
-      if (res.success) {
-        setReviewSuccess("Review submitted and verified! Thank you for your feedback.");
-        setTimeout(() => {
-          setReviewItem(null);
-          setReviewSuccess(null);
-        }, 2200);
-      } else {
-        setReviewError(res.error || "Failed to submit review.");
-      }
-    });
   };
 
   const steps = [
@@ -358,23 +318,6 @@ function TrackOrderContent() {
                             <p className="text-xs text-neutral-400 mt-0.5">
                               PKR {Number(it.price).toLocaleString()} each
                             </p>
-                            <div className="mt-1.5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setReviewItem({ item: it, order });
-                                  setReviewRating(5);
-                                  setReviewTitle("");
-                                  setReviewComment("");
-                                  setReviewSuccess(null);
-                                  setReviewError(null);
-                                }}
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-800 hover:text-black underline cursor-pointer"
-                              >
-                                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                                <span>Write a Review</span>
-                              </button>
-                            </div>
                           </div>
                           <p className="font-semibold text-sm text-neutral-900 shrink-0">
                             PKR {(Number(it.price) * it.quantity).toLocaleString()}
@@ -475,123 +418,6 @@ function TrackOrderContent() {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Verified Buyer Review Modal */}
-      {reviewItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-neutral-200 max-h-[92vh] overflow-y-auto space-y-5 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  <span>Verified Purchase • Order #{reviewItem.order.id.toString().padStart(4, "0")}</span>
-                </div>
-                <h3 className="text-lg font-bold text-neutral-900 leading-snug">
-                  Review &quot;{reviewItem.item.name}&quot;
-                </h3>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setReviewItem(null)}
-                className="p-1.5 text-neutral-400 hover:text-neutral-900 rounded-xl transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {reviewError && (
-              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-800 text-xs">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                <span>{reviewError}</span>
-              </div>
-            )}
-
-            {reviewSuccess && (
-              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-emerald-800 text-xs font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{reviewSuccess}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleReviewSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1.5">
-                  Rating *
-                </label>
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onMouseEnter={() => setReviewHoverRating(star)}
-                      onMouseLeave={() => setReviewHoverRating(null)}
-                      onClick={() => setReviewRating(star)}
-                      className="p-1 cursor-pointer focus:outline-hidden transition"
-                      aria-label={`${star} stars`}
-                    >
-                      <Star
-                        className={`w-6 h-6 ${
-                          star <= (reviewHoverRating !== null ? reviewHoverRating : reviewRating)
-                            ? "fill-amber-400 text-amber-400 scale-110"
-                            : "text-neutral-300"
-                        } transition-transform`}
-                      />
-                    </button>
-                  ))}
-                  <span className="text-xs font-bold text-neutral-700 ml-1">
-                    {reviewRating}.0 / 5.0
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1.5">
-                  Review Headline
-                </label>
-                <input
-                  type="text"
-                  value={reviewTitle}
-                  onChange={(e) => setReviewTitle(e.target.value)}
-                  placeholder="e.g. Loved the heavy fabric and premium finish!"
-                  className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-hidden focus:border-black"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1.5">
-                  Your Comments *
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="Tell other buyers about the fit, quality, comfort, and delivery experience..."
-                  className="w-full px-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-hidden focus:border-black"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-neutral-100">
-                <button
-                  type="button"
-                  onClick={() => setReviewItem(null)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-600 hover:text-black cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isReviewPending}
-                  className="px-6 py-2.5 bg-black text-white text-xs font-semibold rounded-xl hover:bg-neutral-800 transition cursor-pointer disabled:opacity-60"
-                >
-                  {isReviewPending ? "Posting..." : "Publish Verified Review"}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </div>

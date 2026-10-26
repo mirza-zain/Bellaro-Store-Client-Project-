@@ -33,6 +33,9 @@ import {
   updateProductStockAction,
   DashboardStats,
   getDashboardData,
+  updateFootwearSizePresetsAction,
+  applySizesToCategoryAction,
+  FootwearSizePresets,
 } from "@/app/lib/actions/admin";
 import AdminInstallAndNotifyBar from "./AdminInstallAndNotifyBar";
 
@@ -40,12 +43,14 @@ interface AdminClientViewProps {
   stats: DashboardStats;
   products: Product[];
   orders: Order[];
+  initialSizePresets?: FootwearSizePresets;
 }
 
 export default function AdminClientView({
   stats,
   products,
   orders,
+  initialSizePresets,
 }: AdminClientViewProps) {
   const router = useRouter();
   const [ordersList, setOrdersList] = useState<Order[]>(orders);
@@ -60,7 +65,60 @@ export default function AdminClientView({
   const [selectedProofOrder, setSelectedProofOrder] = useState<Order | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
-  // Live auto-refresh from live database
+  // Dynamic Footwear Size Master states (Adults & Kids)
+  const [adultSizesInput, setAdultSizesInput] = useState(
+    initialSizePresets?.rawAdult || "39, 40, 41, 42, 43, 44, 45"
+  );
+  const [kidsSizesInput, setKidsSizesInput] = useState(
+    initialSizePresets?.rawKids || "28, 29, 30, 31, 32, 33, 34, 35"
+  );
+  const [isSavingSizes, setIsSavingSizes] = useState(false);
+  const [isApplyingSizes, setIsApplyingSizes] = useState(false);
+
+  const handleSaveSizePresets = async () => {
+    setIsSavingSizes(true);
+    try {
+      const res = await updateFootwearSizePresetsAction({
+        adultSizes: adultSizesInput,
+        kidsSizes: kidsSizesInput,
+      });
+      if (res.success) {
+        showToast("Footwear size presets saved to database!");
+      } else {
+        showToast(res.error || "Failed to save sizes.", "error");
+      }
+    } catch {
+      showToast("Failed to save size presets.", "error");
+    } finally {
+      setIsSavingSizes(false);
+    }
+  };
+
+  const handleApplySizesToAll = async (target: "adults" | "kids" | "all") => {
+    if (
+      !confirm(
+        `Are you sure you want to apply these sizes to ${target.toUpperCase()} footwear in the catalog? All matched products will have their size variants updated automatically.`
+      )
+    ) {
+      return;
+    }
+    setIsApplyingSizes(true);
+    try {
+      const res = await applySizesToCategoryAction({ target });
+      if (res.success) {
+        showToast(`Successfully applied sizes to ${res.count} footwear products!`);
+        refreshDashboard(true);
+      } else {
+        showToast(res.error || "Failed to apply sizes.", "error");
+      }
+    } catch {
+      showToast("Failed to apply sizes.", "error");
+    } finally {
+      setIsApplyingSizes(false);
+    }
+  };
+
+  // Live refresh from live database
   const refreshDashboard = useCallback(async (manual = false) => {
     if (manual) setIsRefreshing(true);
     try {
@@ -68,6 +126,10 @@ export default function AdminClientView({
       if (data && data.stats) {
         setStatsData(data.stats);
         setProductsList(data.recentProducts || []);
+        if (data.sizePresets) {
+          setAdultSizesInput(data.sizePresets.rawAdult);
+          setKidsSizesInput(data.sizePresets.rawKids);
+        }
         setOrdersList((prev) => {
           if (prev.length > 0 && data.recentOrders.length > prev.length) {
             const newest = data.recentOrders[0];
@@ -78,7 +140,6 @@ export default function AdminClientView({
             });
             setTimeout(() => setStatusMessage(null), 4000);
 
-            // Pleasant notification chime via Web Audio API
             try {
               const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
               if (AudioCtx) {
@@ -111,14 +172,8 @@ export default function AdminClientView({
     }
   }, []);
 
-  // Poll every 8s and trigger instant refresh on window focus
+  // Performance optimized: Refresh on window focus or visibility change without hammering DB
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (typeof document !== "undefined" && document.visibilityState === "visible") {
-        refreshDashboard(false);
-      }
-    }, 8000);
-
     const onVisibilityOrFocus = () => {
       if (typeof document !== "undefined" && document.visibilityState === "visible") {
         refreshDashboard(false);
@@ -129,7 +184,6 @@ export default function AdminClientView({
     document.addEventListener("visibilitychange", onVisibilityOrFocus);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener("focus", onVisibilityOrFocus);
       document.removeEventListener("visibilitychange", onVisibilityOrFocus);
     };
@@ -516,6 +570,103 @@ export default function AdminClientView({
               {statsData.lowStockCount}
             </p>
             <span className="text-[11px] text-amber-600 font-medium">&lt; 10 units left</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dynamic Footwear Size Master Controller */}
+      <div className="bg-white rounded-3xl border border-neutral-200 p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-neutral-100 text-neutral-800 rounded-full text-[10px] font-bold uppercase tracking-wider mb-1">
+              <span>Shoe Size Controller</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-neutral-900">
+              Footwear Size Master (Adults &amp; Kids)
+            </h3>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Set the exact shoe sizes your store sells. You don&apos;t have to write sizes manually — configure them here and sync to all products.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            <button
+              type="button"
+              onClick={handleSaveSizePresets}
+              disabled={isSavingSizes}
+              className="px-4 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
+            >
+              {isSavingSizes ? "Saving..." : "Save Size Presets"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleApplySizesToAll("all")}
+              disabled={isApplyingSizes}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isApplyingSizes ? "animate-spin" : ""}`} />
+              <span>{isApplyingSizes ? "Applying..." : "Sync to All Footwear"}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase text-neutral-800 tracking-wider">
+                👞 Adult Footwear Sizes
+              </label>
+              <span className="text-[10px] text-neutral-400 font-mono">Comma-separated</span>
+            </div>
+            <input
+              type="text"
+              value={adultSizesInput}
+              onChange={(e) => setAdultSizesInput(e.target.value)}
+              placeholder="39, 40, 41, 42, 43, 44, 45"
+              className="w-full px-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-xs sm:text-sm font-medium text-neutral-900 focus:outline-hidden focus:border-black"
+            />
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-[11px] text-neutral-500">
+                Current: {adultSizesInput.split(",").filter(Boolean).length} sizes configured
+              </p>
+              <button
+                type="button"
+                onClick={() => handleApplySizesToAll("adults")}
+                disabled={isApplyingSizes}
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer"
+              >
+                Apply to Adult Shoes &rarr;
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase text-neutral-800 tracking-wider">
+                🧒 Kids Footwear Sizes
+              </label>
+              <span className="text-[10px] text-neutral-400 font-mono">Comma-separated</span>
+            </div>
+            <input
+              type="text"
+              value={kidsSizesInput}
+              onChange={(e) => setKidsSizesInput(e.target.value)}
+              placeholder="28, 29, 30, 31, 32, 33, 34, 35"
+              className="w-full px-3.5 py-2 bg-white border border-neutral-200 rounded-xl text-xs sm:text-sm font-medium text-neutral-900 focus:outline-hidden focus:border-black"
+            />
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-[11px] text-neutral-500">
+                Current: {kidsSizesInput.split(",").filter(Boolean).length} sizes configured
+              </p>
+              <button
+                type="button"
+                onClick={() => handleApplySizesToAll("kids")}
+                disabled={isApplyingSizes}
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer"
+              >
+                Apply to Kids Shoes &rarr;
+              </button>
+            </div>
           </div>
         </div>
       </div>

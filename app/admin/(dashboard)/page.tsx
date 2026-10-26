@@ -11,6 +11,7 @@ async function DashboardData() {
       stats={data.stats}
       products={data.recentProducts}
       orders={data.recentOrders}
+      initialSizePresets={data.sizePresets}
     />
   );
 }

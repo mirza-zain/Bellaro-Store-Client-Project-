@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from "@/app/lib/db";
-import { orders, products, discountCodes, Order, Product, ProductVariant, DiscountCode } from "@/app/db/schema";
+import { orders, products, discountCodes, storeSettings, Order, Product, ProductVariant, DiscountCode } from "@/app/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { connection } from "next/server";
@@ -222,9 +222,156 @@ export async function ensureTablesExist() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS store_settings (
+        id SERIAL PRIMARY KEY,
+        key TEXT NOT NULL UNIQUE,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      INSERT INTO store_settings (key, value)
+      VALUES 
+        ('adult_footwear_sizes', '39, 40, 41, 42, 43, 44, 45'),
+        ('kids_footwear_sizes', '28, 29, 30, 31, 32, 33, 34, 35')
+      ON CONFLICT (key) DO NOTHING;
+    `);
+
     tablesEnsured = true;
   } catch (error) {
     console.error("Error creating tables:", error);
+    tablesEnsured = true; // Mark ensured to avoid infinite retry overhead during runtime
+  }
+}
+
+export type FootwearSizePresets = {
+  adultSizes: string[];
+  kidsSizes: string[];
+  rawAdult: string;
+  rawKids: string;
+};
+
+export async function getFootwearSizePresets(): Promise<FootwearSizePresets> {
+  try {
+    await ensureTablesExist();
+    const rows = await db.select().from(storeSettings);
+    const adultRow = rows.find((r) => r.key === "adult_footwear_sizes");
+    const kidsRow = rows.find((r) => r.key === "kids_footwear_sizes");
+
+    const rawAdult = adultRow?.value || "39, 40, 41, 42, 43, 44, 45";
+    const rawKids = kidsRow?.value || "28, 29, 30, 31, 32, 33, 34, 35";
+
+    const adultSizes = rawAdult.split(",").map((s) => s.trim()).filter(Boolean);
+    const kidsSizes = rawKids.split(",").map((s) => s.trim()).filter(Boolean);
+
+    return { adultSizes, kidsSizes, rawAdult, rawKids };
+  } catch (e) {
+    console.warn("Using default footwear size presets:", e);
+    return {
+      adultSizes: ["39", "40", "41", "42", "43", "44", "45"],
+      kidsSizes: ["28", "29", "30", "31", "32", "33", "34", "35"],
+      rawAdult: "39, 40, 41, 42, 43, 44, 45",
+      rawKids: "28, 29, 30, 31, 32, 33, 34, 35",
+    };
+  }
+}
+
+export async function updateFootwearSizePresetsAction(input: {
+  adultSizes: string;
+  kidsSizes: string;
+}) {
+  await verifyAdminSession();
+  try {
+    await ensureTablesExist();
+
+    const cleanAdult = input.adultSizes.trim() || "39, 40, 41, 42, 43, 44, 45";
+    const cleanKids = input.kidsSizes.trim() || "28, 29, 30, 31, 32, 33, 34, 35";
+
+    await db.insert(storeSettings).values({
+      key: "adult_footwear_sizes",
+      value: cleanAdult,
+      updatedAt: new Date(),
+    }).onConflictDoUpdate({
+      target: storeSettings.key,
+      set: { value: cleanAdult, updatedAt: new Date() },
+    });
+
+    await db.insert(storeSettings).values({
+      key: "kids_footwear_sizes",
+      value: cleanKids,
+      updatedAt: new Date(),
+    }).onConflictDoUpdate({
+      target: storeSettings.key,
+      set: { value: cleanKids, updatedAt: new Date() },
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/manageProducts");
+    revalidatePath("/products");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating size presets:", error);
+    return { success: false, error: error?.message || "Failed to save size presets." };
+  }
+}
+
+export async function applySizesToCategoryAction(input: {
+  target: "adults" | "kids" | "all";
+}) {
+  await verifyAdminSession();
+  try {
+    await ensureTablesExist();
+    const presets = await getFootwearSizePresets();
+    const allProducts = await db.select().from(products);
+
+    const footwearProducts = allProducts.filter(
+      (p) => p.category?.toLowerCase() === "footwear"
+    );
+
+    let updatedCount = 0;
+
+    for (const prod of footwearProducts) {
+      const isKids =
+        prod.name.toLowerCase().includes("kid") ||
+        prod.subCategory?.toLowerCase().includes("kid") ||
+        prod.description?.toLowerCase().includes("kid");
+
+      let sizesToApply: string[] = [];
+      if (input.target === "kids" && isKids) {
+        sizesToApply = presets.kidsSizes;
+      } else if (input.target === "adults" && !isKids) {
+        sizesToApply = presets.adultSizes;
+      } else if (input.target === "all") {
+        sizesToApply = isKids ? presets.kidsSizes : presets.adultSizes;
+      }
+
+      if (sizesToApply.length > 0) {
+        const basePrice = Number(prod.price) || 4500;
+        const variants: ProductVariant[] = sizesToApply.map((size) => ({
+          label: size,
+          price: basePrice,
+          stock: 20,
+        }));
+
+        await db
+          .update(products)
+          .set({ variants })
+          .where(eq(products.id, prod.id));
+
+        updatedCount++;
+      }
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/manageProducts");
+    revalidatePath("/products");
+    return { success: true, count: updatedCount };
+  } catch (error: any) {
+    console.error("Error applying sizes to category:", error);
+    return { success: false, error: error?.message || "Failed to update category sizes." };
   }
 }
 
@@ -239,6 +386,7 @@ export type DashboardData = {
   stats: DashboardStats;
   recentProducts: Product[];
   recentOrders: Order[];
+  sizePresets: FootwearSizePresets;
 };
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -248,6 +396,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     await verifyAdminSession();
     const allProducts = await db.select().from(products).orderBy(desc(products.id));
     const allOrders = await db.select().from(orders).orderBy(desc(orders.id));
+    const sizePresets = await getFootwearSizePresets();
 
     const totalRevenue = allOrders.reduce((sum, order) => {
       return sum + (Number(order.totalAmount) || 0);
@@ -264,9 +413,11 @@ export async function getDashboardData(): Promise<DashboardData> {
       },
       recentProducts: allProducts.slice(0, 10),
       recentOrders: allOrders.slice(0, 10),
+      sizePresets,
     };
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
+    const sizePresets = await getFootwearSizePresets();
     return {
       stats: {
         totalProducts: 0,
@@ -276,6 +427,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       },
       recentProducts: [],
       recentOrders: [],
+      sizePresets,
     };
   }
 }

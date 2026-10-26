@@ -151,6 +151,13 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const storeSettings = pgTable("store_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type Order = typeof orders.$inferSelect;
@@ -165,6 +172,8 @@ export type ShippingRule = typeof shippingRules.$inferSelect;
 export type NewShippingRule = typeof shippingRules.$inferInsert;
 export type PushSubscriptionRecord = typeof pushSubscriptions.$inferSelect;
 export type NewPushSubscriptionRecord = typeof pushSubscriptions.$inferInsert;
+export type StoreSetting = typeof storeSettings.$inferSelect;
+export type NewStoreSetting = typeof storeSettings.$inferInsert;
 export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;
 export type Account = typeof account.$inferSelect;
