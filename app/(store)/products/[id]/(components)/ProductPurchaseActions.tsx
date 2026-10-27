@@ -30,6 +30,7 @@ const getColorHex = (name: string): string => {
   if (n.includes("burgundy") || n.includes("oxblood") || n.includes("maroon")) return "#6b1426";
   if (n.includes("navy")) return "#1a2a44";
   if (n.includes("blue")) return "#2563eb";
+  if (n.includes("fone") || n.includes("fawn")) return "#cbb493";
   if (n.includes("olive") || n.includes("green")) return "#556b2f";
   if (n.includes("charcoal") || n.includes("grey") || n.includes("gray")) return "#4b5563";
   if (n.includes("beige") || n.includes("cream")) return "#f5f5f4";

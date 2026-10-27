@@ -763,7 +763,7 @@ export default function ShopFilterView({
                     }`}
                   >
                     {/* Thumbnail Image Container */}
-                    <div className="relative w-full aspect-square overflow-hidden rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
+                    <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
                       <Image
                         src={item.image || "/images/img1.jpg"}
                         alt={item.name}

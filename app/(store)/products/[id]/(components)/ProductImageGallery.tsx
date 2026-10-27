@@ -12,9 +12,11 @@ interface ProductImageGalleryProps {
 export default function ProductImageGallery({ images, name }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [aspectRatios, setAspectRatios] = useState<Record<string, number>>({});
 
   const displayImages = images && images.length > 0 ? images.slice(0, 3) : ["/images/img1.jpg"];
   const currentImage = displayImages[selectedIndex] || displayImages[0];
+  const currentRatio = aspectRatios[currentImage] || null;
 
   const handlePrev = () => {
     setSelectedIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
@@ -22,6 +24,15 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
 
   const handleNext = () => {
     setSelectedIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleImageLoad = (src: string, naturalWidth: number, naturalHeight: number) => {
+    if (naturalWidth && naturalHeight) {
+      const rawRatio = naturalWidth / naturalHeight;
+      // Clamped between 0.65 (tall portrait posters) and 1.15 (square/landscape footwear)
+      const clamped = Math.min(Math.max(rawRatio, 0.65), 1.15);
+      setAspectRatios((prev) => ({ ...prev, [src]: clamped }));
+    }
   };
 
   // Keyboard left/right arrow navigation
@@ -56,31 +67,40 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
 
   return (
     <div className="w-full space-y-4">
-      {/* Main Image Viewport */}
+      {/* Main Image Viewport: dynamically adapts aspect ratio to the active image */}
       <div
-        className="relative aspect-square md:aspect-[4/5] w-full rounded-3xl overflow-hidden bg-neutral-100 border border-neutral-200/80 shadow-xs group flex items-center justify-center select-none"
+        className="relative w-full rounded-3xl overflow-hidden bg-neutral-50/70 border border-neutral-200/70 shadow-xs group flex items-center justify-center select-none transition-[aspect-ratio] duration-300 mx-auto"
+        style={{
+          aspectRatio: currentRatio ? `${currentRatio}` : "4/5",
+          maxHeight: "640px",
+        }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Ambient blurred backdrop that matches image colors */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Subtle luminous ambient aura matching product colors */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20 blur-2xl">
           <Image
             src={currentImage}
             alt=""
             fill
-            className="object-cover scale-125 blur-2xl opacity-35 brightness-95"
+            className="object-cover scale-110"
             priority
           />
         </div>
 
-        {/* Foreground full product image: zero cropping, click-through */}
-        <div className="relative w-full h-full z-10 flex items-center justify-center p-2 sm:p-4 pointer-events-none">
+        {/* Foreground full product image: zero cropping, crisp details */}
+        <div className="relative w-full h-full z-10 flex items-center justify-center p-2 sm:p-3 pointer-events-none">
           <Image
             src={currentImage}
             alt={`${name} - View ${selectedIndex + 1}`}
             fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="object-contain transition duration-300 drop-shadow-xs"
             priority
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              handleImageLoad(currentImage, img.naturalWidth, img.naturalHeight);
+            }}
           />
         </div>
 
@@ -95,7 +115,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
                 handlePrev();
               }}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/95 hover:bg-white text-neutral-900 shadow-lg backdrop-blur-xs transition z-30 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer hover:scale-105 active:scale-95"
+              className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/95 hover:bg-white text-neutral-900 shadow-md backdrop-blur-xs transition z-30 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronLeft className="w-5 h-5 pointer-events-none" />
             </button>
@@ -107,7 +127,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
                 handleNext();
               }}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/95 hover:bg-white text-neutral-900 shadow-lg backdrop-blur-xs transition z-30 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer hover:scale-105 active:scale-95"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/95 hover:bg-white text-neutral-900 shadow-md backdrop-blur-xs transition z-30 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronRight className="w-5 h-5 pointer-events-none" />
             </button>
@@ -136,7 +156,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
                   e.stopPropagation();
                   setSelectedIndex(index);
                 }}
-                className={`relative w-20 h-20 rounded-2xl overflow-hidden bg-neutral-100 transition cursor-pointer border-2 shrink-0 ${
+                className={`relative w-20 h-20 rounded-2xl overflow-hidden bg-neutral-50 transition cursor-pointer border-2 shrink-0 ${
                   isActive
                     ? "border-black ring-2 ring-black/20 scale-102 opacity-100"
                     : "border-neutral-200 hover:border-neutral-400 opacity-60 hover:opacity-100"
@@ -146,7 +166,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
                   src={imgUrl}
                   alt={`${name} thumbnail ${index + 1}`}
                   fill
-                  className="object-cover object-center pointer-events-none"
+                  className="object-contain p-1 pointer-events-none"
                 />
               </button>
             );

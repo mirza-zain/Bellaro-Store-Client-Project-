@@ -72,7 +72,7 @@ export default async function Products({ limit, category }: Prop) {
             key={item.id}
             className="group flex flex-col gap-2 sm:gap-3"
           >
-            <div className="relative w-full aspect-square overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
+            <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
               <Image
                 src={
                   item.image && !item.image.includes("/images/img1.jpg")
