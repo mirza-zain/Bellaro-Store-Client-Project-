@@ -32,7 +32,7 @@ export default function FeaturedItems() {
           ))}
         </div>
       }>
-        <Products limit={8} />
+        <Products limit={12} />
       </Suspense>
     </div>
   );

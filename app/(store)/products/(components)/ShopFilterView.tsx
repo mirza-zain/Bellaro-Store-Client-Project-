@@ -51,7 +51,7 @@ export default function ShopFilterView({
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [itemsPerPage, setItemsPerPage] = useState(36);
 
   const catalogTopRef = useRef<HTMLDivElement>(null);
 
@@ -642,17 +642,19 @@ export default function ShopFilterView({
         <div className="flex-1 min-w-0 w-full space-y-6">
           {/* Active Filter Chips Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-neutral-500 px-1">
-            <p className="text-xs sm:text-sm">
-              Showing{" "}
-              <span className="font-bold text-neutral-900">
-                {filteredProducts.length === 0
-                  ? 0
-                  : `${(currentPage - 1) * itemsPerPage + 1} - ${Math.min(
-                      currentPage * itemsPerPage,
-                      filteredProducts.length
-                    )}`}
-              </span>{" "}
-              of <span className="font-bold text-neutral-900">{filteredProducts.length}</span> items
+            <p className="text-xs sm:text-sm text-neutral-600">
+              {filteredProducts.length === 0 ? (
+                <span>No products found</span>
+              ) : filteredProducts.length <= itemsPerPage ? (
+                <span>
+                  Showing all <strong className="text-neutral-900">{filteredProducts.length}</strong> products
+                </span>
+              ) : (
+                <span>
+                  Showing <strong className="text-neutral-900">{(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</strong> of <strong className="text-neutral-900">{filteredProducts.length}</strong> products
+                  <span className="text-neutral-400 ml-1.5 font-medium">(Page {currentPage} of {totalPages})</span>
+                </span>
+              )}
             </p>
 
             {activeFiltersCount > 0 && (
@@ -854,11 +856,12 @@ export default function ShopFilterView({
                 <select
                   value={itemsPerPage}
                   onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="py-1 px-2 bg-neutral-100 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-800 cursor-pointer focus:outline-hidden"
+                  className="py-1 px-2.5 bg-neutral-100 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-800 cursor-pointer focus:outline-hidden"
                 >
-                  <option value={12}>12</option>
-                  <option value={24}>24</option>
-                  <option value={48}>48</option>
+                  <option value={24}>24 per page</option>
+                  <option value={36}>36 per page</option>
+                  <option value={72}>72 per page</option>
+                  <option value={9999}>All Products</option>
                 </select>
               </div>
 
