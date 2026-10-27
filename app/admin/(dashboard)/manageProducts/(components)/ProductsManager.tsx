@@ -7,6 +7,8 @@ import {
   AlertTriangle,
   Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Edit,
   Eye,
   Minus,
@@ -180,6 +182,10 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSyncedTime, setLastSyncedTime] = useState<Date>(new Date());
+
+  // Pagination state (defaults to 20 items per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // Dynamic existing categories derived from current products (defaults to authentic Bellaro categories: Footwear & Perfumes)
   const existingCategories = useMemo(() => {
@@ -760,6 +766,18 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     return matchesSearch && matchesCategory && matchesStock;
   });
 
+  // Reset pagination when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, stockFilter, itemsPerPage]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+  const paginatedProducts = useMemo(() => {
+    if (itemsPerPage >= 9999) return filteredProducts;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
   return (
     <div className="space-y-6">
       {/* Toast */}
@@ -924,7 +942,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
               </button>
             </div>
           ) : (
-            filteredProducts.map((p) => {
+            paginatedProducts.map((p) => {
               const stockNum = Number(p.stock) || 0;
               const isOutOfStock = stockNum <= 0;
               const isLowStock = stockNum > 0 && stockNum < 10;
@@ -1097,7 +1115,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((p) => {
+                paginatedProducts.map((p) => {
                   const stockNum = Number(p.stock) || 0;
                   const isOutOfStock = stockNum <= 0;
                   const isLowStock = stockNum > 0 && stockNum < 10;
@@ -1248,6 +1266,101 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        {filteredProducts.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-neutral-100 mt-4 px-1">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+              <span>
+                Showing{" "}
+                <strong className="text-neutral-900 font-semibold">
+                  {itemsPerPage >= 9999
+                    ? `1–${filteredProducts.length}`
+                    : `${(currentPage - 1) * itemsPerPage + 1}–${Math.min(
+                        currentPage * itemsPerPage,
+                        filteredProducts.length
+                      )}`}
+                </strong>{" "}
+                of{" "}
+                <strong className="text-neutral-900 font-semibold">
+                  {filteredProducts.length}
+                </strong>{" "}
+                products
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-neutral-400">Rows:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="border border-neutral-200 rounded-lg px-2 py-1 text-xs text-neutral-700 bg-white cursor-pointer focus:outline-neutral-900"
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={9999}>All Products</option>
+                </select>
+              </div>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => {
+                    if (totalPages <= 7) return true;
+                    if (page === 1 || page === totalPages) return true;
+                    return Math.abs(page - currentPage) <= 1;
+                  })
+                  .map((page, idx, arr) => {
+                    const prev = arr[idx - 1];
+                    const showEllipsis = prev && page - prev > 1;
+
+                    return (
+                      <React.Fragment key={page}>
+                        {showEllipsis && (
+                          <span className="px-1 text-neutral-400 text-xs">...</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                            currentPage === page
+                              ? "bg-black text-white shadow-xs"
+                              : "border border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-1.5 rounded-lg border border-neutral-200 text-neutral-700 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add / Edit Product Modal */}
