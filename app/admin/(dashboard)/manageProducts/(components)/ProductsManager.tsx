@@ -47,6 +47,26 @@ const FOOTWEAR_COLOR_PRESETS = [
   { name: "Burgundy", hex: "#6b1426" },
 ];
 
+const getColorHex = (name: string): string => {
+  const n = name.toLowerCase();
+  const preset = FOOTWEAR_COLOR_PRESETS.find((p) => p.name.toLowerCase() === n);
+  if (preset) return preset.hex;
+  if (n.includes("black")) return "#171717";
+  if (n.includes("white")) return "#ffffff";
+  if (n.includes("mustard")) return "#e1ad01";
+  if (n.includes("peach")) return "#fba476";
+  if (n.includes("dark brown") || n.includes("chocolate") || n.includes("coffee")) return "#3e2723";
+  if (n.includes("brown")) return "#5d4037";
+  if (n.includes("tan") || n.includes("camel") || n.includes("cognac")) return "#b87333";
+  if (n.includes("burgundy") || n.includes("oxblood") || n.includes("maroon")) return "#6b1426";
+  if (n.includes("navy")) return "#1a2a44";
+  if (n.includes("blue")) return "#2563eb";
+  if (n.includes("olive") || n.includes("green")) return "#556b2f";
+  if (n.includes("charcoal") || n.includes("grey") || n.includes("gray")) return "#4b5563";
+  if (n.includes("beige") || n.includes("cream")) return "#f5f5f4";
+  return "#737373";
+};
+
 const ADULT_SHOE_SIZES = ["39", "40", "41", "42", "43", "44", "45"];
 const ADULT_SIZES_39_44 = ["39", "40", "41", "42", "43", "44"];
 const ADULT_SIZES_40_45 = ["40", "41", "42", "43", "44", "45"];
@@ -262,12 +282,20 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
     };
   }, [refreshProducts]);
 
+  const [colorFeedback, setColorFeedback] = useState<string | null>(null);
+
   const handleAddCustomColor = () => {
     const val = customColorInput.trim();
-    if (val && !formColors.includes(val)) {
-      setFormColors((prev) => [...prev, val]);
-      setCustomColorInput("");
+    if (!val) return;
+    if (formColors.some((c) => c.toLowerCase() === val.toLowerCase())) {
+      setColorFeedback(`"${val}" is already in the list.`);
+      setTimeout(() => setColorFeedback(null), 3000);
+      return;
     }
+    setFormColors((prev) => [...prev, val]);
+    setCustomColorInput("");
+    setColorFeedback(`Added "${val}" to colors!`);
+    setTimeout(() => setColorFeedback(null), 3000);
   };
 
   const handleOpenAddModal = () => {
@@ -1406,7 +1434,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
 
               {/* Color Options Section: Only for Footwear & Non-Perfume Items */}
               {!isPerfumes && (
-                <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-white space-y-3">
+                <div className="border border-neutral-200 rounded-2xl p-3.5 sm:p-4 bg-white space-y-3.5">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
@@ -1418,7 +1446,7 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                         )}
                       </h4>
                       <p className="text-[11px] text-neutral-500 mt-0.5">
-                        Click to toggle available colors, or enter a custom color below.
+                        Choose colors below or type a custom color. Active color names are displayed and can be removed at any time.
                       </p>
                     </div>
                     {formColors.length > 0 && (
@@ -1432,62 +1460,132 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                     )}
                   </div>
 
-                  {/* Preset Luxury Footwear Colors */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {FOOTWEAR_COLOR_PRESETS.map((cp) => {
-                      const isSelected = formColors.includes(cp.name);
-                      return (
-                        <button
-                          key={cp.name}
-                          type="button"
-                          onClick={() => {
-                            if (isSelected) {
-                              setFormColors(formColors.filter((c) => c !== cp.name));
-                            } else {
-                              setFormColors([...formColors, cp.name]);
-                            }
-                          }}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer ${
-                            isSelected
-                              ? "bg-black text-white border-black shadow-xs font-semibold"
-                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
-                          }`}
-                        >
-                          <span
-                            className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
-                              cp.name === "White" ? "border-neutral-300" : "border-black/20"
+                  {/* Active Selected Colors List with Names & Delete Buttons */}
+                  <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                        Selected Colors ({formColors.length}):
+                      </span>
+                      {formColors.length > 0 && (
+                        <span className="text-[10px] text-neutral-400">Click ✕ to remove any color</span>
+                      )}
+                    </div>
+                    {formColors.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {formColors.map((colorName) => {
+                          const isCustom = !FOOTWEAR_COLOR_PRESETS.some(
+                            (p) => p.name.toLowerCase() === colorName.toLowerCase()
+                          );
+                          const hex = getColorHex(colorName);
+                          return (
+                            <span
+                              key={colorName}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border shadow-2xs transition ${
+                                isCustom
+                                  ? "bg-amber-50 text-amber-950 border-amber-300"
+                                  : "bg-neutral-900 text-white border-neutral-800"
+                              }`}
+                            >
+                              <span
+                                className={`w-2 h-2 rounded-full shrink-0 border ${
+                                  colorName.toLowerCase() === "white" ? "border-neutral-300" : "border-black/20"
+                                }`}
+                                style={{ backgroundColor: hex }}
+                              />
+                              <span>{colorName}</span>
+                              {isCustom && (
+                                <span className="text-[9px] font-normal uppercase tracking-wider text-amber-700 bg-amber-100 px-1 py-0.2 rounded">
+                                  Custom
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setFormColors(formColors.filter((c) => c !== colorName))}
+                                className="p-0.5 hover:opacity-70 rounded-md transition cursor-pointer ml-0.5 text-neutral-400 hover:text-white"
+                                title={`Remove ${colorName}`}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-neutral-400 italic">No colors selected yet. Toggle presets below or add a custom color.</p>
+                    )}
+                  </div>
+
+                  {/* Preset Quick Toggles */}
+                  <div>
+                    <span className="block text-[11px] font-semibold text-neutral-600 mb-1.5 uppercase tracking-wider">
+                      Quick Preset Colors:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {FOOTWEAR_COLOR_PRESETS.map((cp) => {
+                        const isSelected = formColors.includes(cp.name);
+                        return (
+                          <button
+                            key={cp.name}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setFormColors(formColors.filter((c) => c !== cp.name));
+                              } else {
+                                setFormColors([...formColors, cp.name]);
+                              }
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer ${
+                              isSelected
+                                ? "bg-black text-white border-black shadow-xs font-semibold"
+                                : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
                             }`}
-                            style={{ backgroundColor: cp.hex }}
-                          />
-                          <span>{cp.name}</span>
-                          {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
-                        </button>
-                      );
-                    })}
+                          >
+                            <span
+                              className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
+                                cp.name === "White" ? "border-neutral-300" : "border-black/20"
+                              }`}
+                              style={{ backgroundColor: cp.hex }}
+                            />
+                            <span>{cp.name}</span>
+                            {isSelected && <Check className="w-3 h-3 ml-0.5 text-white" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Custom Color Input */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="text"
-                      value={customColorInput}
-                      onChange={(e) => setCustomColorInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddCustomColor();
-                        }
-                      }}
-                      placeholder="Type custom color (e.g. Suede Tan, Midnight Blue, Cognac)..."
-                      className="flex-1 px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:border-black font-medium"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCustomColor}
-                      className="px-3 py-2 bg-neutral-900 text-white rounded-xl text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
-                    >
-                      + Add Color
-                    </button>
+                  <div className="pt-1 space-y-1.5">
+                    <span className="block text-[11px] font-semibold text-neutral-600 uppercase tracking-wider">
+                      Add Custom Color:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={customColorInput}
+                        onChange={(e) => setCustomColorInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddCustomColor();
+                          }
+                        }}
+                        placeholder="Type custom color (e.g. Suede Tan, Midnight Blue, Cognac)..."
+                        className="flex-1 px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-black/10 focus:border-black font-medium"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomColor}
+                        className="px-3.5 py-2 bg-black text-white rounded-xl text-xs font-semibold hover:bg-neutral-800 transition cursor-pointer shrink-0"
+                      >
+                        + Add Color
+                      </button>
+                    </div>
+                    {colorFeedback && (
+                      <p className="text-[11px] font-medium text-emerald-700 animate-in fade-in duration-150">
+                        {colorFeedback}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
