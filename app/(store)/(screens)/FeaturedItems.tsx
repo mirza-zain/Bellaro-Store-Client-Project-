@@ -11,11 +11,11 @@ export default function FeaturedItems() {
             Featured Collection
           </h2>
           <p className="text-[11px] sm:text-xs text-neutral-500 mt-0.5">
-            Handcrafted shoes &amp; artisanal perfumes
+            Handcrafted leather shoes &amp; footwear
           </p>
         </div>
         <Link
-          href="/products"
+          href="/products?category=Footwear"
           className="text-xs font-bold uppercase tracking-wider text-black hover:text-neutral-600 underline underline-offset-4 cursor-pointer shrink-0 pb-0.5"
         >
           View All &rarr;
@@ -32,7 +32,7 @@ export default function FeaturedItems() {
           ))}
         </div>
       }>
-        <Products limit={12} />
+        <Products limit={12} category="Footwear" />
       </Suspense>
     </div>
   );

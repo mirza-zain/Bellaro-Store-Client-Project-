@@ -26,9 +26,14 @@ export async function getStoreProducts(
 
     // Filter by Category
     if (options?.category && options.category.toLowerCase() !== "all") {
-      items = items.filter(
-        (p) => p.category.toLowerCase() === options.category!.toLowerCase()
-      );
+      const targetCat = options.category.toLowerCase();
+      items = items.filter((p) => {
+        const itemCat = p.category.toLowerCase();
+        if (targetCat === "footwear" || targetCat === "shoes") {
+          return itemCat === "footwear" || itemCat === "shoes";
+        }
+        return itemCat === targetCat;
+      });
     }
 
     // Filter by Sub-Category

@@ -74,7 +74,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Featured Shoes & Parfums Catalog (Immediately Visible on Mobile) */}
+      {/* 3. Featured Shoes Catalog (Immediately Visible on Mobile) */}
       <section className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <FeaturedItems />
       </section>

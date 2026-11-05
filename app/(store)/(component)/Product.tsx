@@ -56,9 +56,14 @@ export default async function Products({ limit, category }: Prop) {
   const displayProducts = dbProducts.length > 0 ? dbProducts : curatedBellaroProducts;
 
   const filtered = category
-    ? displayProducts.filter(
-        (p) => p.category.toLowerCase() === category.toLowerCase()
-      )
+    ? displayProducts.filter((p) => {
+        const itemCat = p.category.toLowerCase();
+        const target = category.toLowerCase();
+        if (target === "footwear" || target === "shoes") {
+          return itemCat === "footwear" || itemCat === "shoes";
+        }
+        return itemCat === target;
+      })
     : displayProducts;
 
   const finalProducts = limit ? filtered.slice(0, limit) : filtered;
