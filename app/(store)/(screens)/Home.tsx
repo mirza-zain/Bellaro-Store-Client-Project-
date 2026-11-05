@@ -17,17 +17,17 @@ export default function HomePage() {
     <div className="w-full flex flex-col gap-4 sm:gap-8">
       {/* 1. Sleek Compact Campaign Hero (Ultra-Clean on Mobile) */}
       <section className="relative w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 pt-1 sm:pt-4">
-        <div className="relative w-full h-[240px] sm:h-[320px] md:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-neutral-200/60">
+        <div className="relative w-full h-[260px] sm:h-[340px] md:h-[420px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-neutral-200/60 bg-neutral-950">
           <Image
-            src="/images/product1.jpg"
-            alt="Bellaro Handcrafted Footwear"
+            src="/images/hero-banner.jpg"
+            alt="Bellaro Handcrafted Footwear & Signature Perfumes"
             fill
             priority
-            sizes="100vw"
-            className="object-cover object-center"
+            sizes="(max-width: 768px) 100vw, 1280px"
+            className="object-cover object-right sm:object-center"
           />
-          {/* Subtle luxury gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+          {/* Subtle luxury gradient for ultra-crisp text legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 sm:bg-gradient-to-r sm:from-black/85 sm:via-black/35 sm:to-transparent" />
 
           {/* Minimal, direct overlay content */}
           <div className="absolute inset-x-4 bottom-4 sm:inset-x-8 sm:bottom-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 text-white">
