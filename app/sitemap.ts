@@ -3,7 +3,7 @@ import { db } from '@/app/lib/db';
 import { products } from '@/app/db/schema';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bellaro-store.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.bellaro.pk';
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {

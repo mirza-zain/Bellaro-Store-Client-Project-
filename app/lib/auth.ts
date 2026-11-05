@@ -46,6 +46,7 @@ export const auth = betterAuth({
     "https://bellaro-store.vercel.app",
     "https://*.vercel.app",
     "https://bellaro.pk",
+    "https://www.bellaro.pk",
     "https://*.bellaro.pk",
     ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : []),
     ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),

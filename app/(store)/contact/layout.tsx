@@ -5,10 +5,14 @@ export const metadata: Metadata = {
   title: "Contact Us & Support",
   description:
     "Get in touch with the Bellaro customer service team. Reach out via WhatsApp or direct helpline for shoe sizing advice, perfume consultations, and express delivery assistance across Pakistan.",
+  alternates: {
+    canonical: "/contact",
+  },
   openGraph: {
     title: "Contact Us & Support | Bellaro",
     description:
       "Get in touch with the Bellaro customer support team for shoe orders, sizing inquiries, and delivery assistance across Pakistan.",
+    url: "/contact",
   },
 };
 

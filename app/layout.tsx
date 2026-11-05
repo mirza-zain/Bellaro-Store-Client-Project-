@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { CartProvider } from "@/app/context/CartContext";
 import { Analytics } from "@vercel/analytics/next";
@@ -7,7 +8,8 @@ export const viewport: Viewport = {
   themeColor: "#09090b",
 };
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bellaro.pk";
+const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-GFME5HMR70";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -38,7 +40,9 @@ export const metadata: Metadata = {
   keywords: [
     "Bellaro",
     "Bellaro PK",
+    "bellaro.pk",
     "Bellaro shoes",
+    "handcrafted shoes Pakistan",
     "horsebit loafers Pakistan",
     "leather loafers Karachi",
     "driving moccasins Pakistan",
@@ -48,10 +52,16 @@ export const metadata: Metadata = {
     "mens formal shoes Karachi",
     "Bellaro perfume",
     "luxury perfumes Pakistan",
-    "artisanal fragrances",
+    "artisanal fragrances Karachi",
     "cash on delivery shoes Pakistan",
+    "buy shoes online Pakistan",
+    "men luxury footwear Karachi",
+    "Zamzama shoe store Karachi",
   ],
-  authors: [{ name: "Bellaro Official", url: "https://www.instagram.com/bellaro.pk/" }],
+  authors: [
+    { name: "Bellaro Official", url: "https://www.bellaro.pk" },
+    { name: "Bellaro Instagram", url: "https://www.instagram.com/bellaro.pk/" },
+  ],
   creator: "Bellaro",
   publisher: "Bellaro",
   formatDetection: {
@@ -86,7 +96,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bellaro | Handcrafted Loafers, Moccasins, Slides & Signature Perfumes",
     description:
-      "Handcrafted footwear engineered for cloud comfort alongside bespoke artisanal perfumes.",
+      "Handcrafted footwear engineered for cloud comfort alongside bespoke artisanal perfumes in Pakistan.",
     images: ["/images/og-image.png"],
     creator: "@bellaro.pk",
     site: "@bellaro.pk",
@@ -102,6 +112,15 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+  },
+  other: {
+    "geo.region": "PK-SD",
+    "geo.placename": "Karachi",
+    "geo.position": "24.8291;67.0345",
+    "ICBM": "24.8291, 67.0345",
+  },
 };
 
 export default function RootLayout({
@@ -116,6 +135,7 @@ export default function RootLayout({
         "@type": "Organization",
         "@id": `${siteUrl}/#organization`,
         name: "Bellaro",
+        legalName: "Bellaro Pakistan",
         url: siteUrl,
         logo: {
           "@type": "ImageObject",
@@ -150,6 +170,46 @@ export default function RootLayout({
           "query-input": "required name=search_term_string",
         },
       },
+      {
+        "@type": "Store",
+        "@id": `${siteUrl}/#store`,
+        name: "Bellaro Store",
+        url: siteUrl,
+        image: `${siteUrl}/images/og-image.png`,
+        telephone: "+92-339-4015589",
+        priceRange: "PKR 2,000 - PKR 10,000",
+        currenciesAccepted: "PKR",
+        paymentAccepted: "Cash on Delivery, Bank Transfer, EasyPaisa, JazzCash",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "Phase 5, 4th Commercial Lane, Zamzama Commercial Area, DHA Phase 5",
+          addressLocality: "Karachi",
+          addressRegion: "Sindh",
+          postalCode: "75500",
+          addressCountry: "PK",
+        },
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: 24.8291,
+          longitude: 67.0345,
+        },
+        openingHoursSpecification: [
+          {
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday",
+            ],
+            opens: "11:00",
+            closes: "23:00",
+          },
+        ],
+      },
     ],
   };
 
@@ -169,8 +229,29 @@ export default function RootLayout({
           {children}
         </CartProvider>
         <Analytics />
+        {gaId && (
+          <>
+            <Script
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+            />
+            <Script
+              id="google-analytics"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${gaId}', {
+                    page_path: window.location.pathname,
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
       </body>
     </html>
   );
 }
-

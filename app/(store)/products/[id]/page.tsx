@@ -154,7 +154,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = dbProduct || curatedProductsMap[productId];
   if (!product) return { title: "Product Not Found" };
 
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bellaro.pk";
   const productUrl = `${siteUrl}/products/${product.id}`;
 
   return {
@@ -214,14 +214,16 @@ export default async function ProductDetailPage({ params }: Props) {
       audienceBadge = "👞 Adults (39–45)";
     }
   }
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bellaro-store.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.bellaro.pk";
 
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    image: product.image || `${siteUrl}/images/img1.jpg`,
+    image: product.image ? [product.image] : [`${siteUrl}/images/img1.jpg`],
     description: product.description,
+    sku: `BEL-${product.id}`,
+    category: product.category,
     brand: {
       "@type": "Brand",
       name: "Bellaro",
@@ -231,6 +233,8 @@ export default async function ProductDetailPage({ params }: Props) {
       url: `${siteUrl}/products/${product.id}`,
       priceCurrency: "PKR",
       price: product.price,
+      priceValidUntil: "2027-12-31",
+      itemCondition: "https://schema.org/NewCondition",
       availability: inStock
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
