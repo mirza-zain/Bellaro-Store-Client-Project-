@@ -52,7 +52,7 @@ export default function ShopFilterView({
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(36);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   const catalogTopRef = useRef<HTMLDivElement>(null);
 
@@ -851,69 +851,74 @@ export default function ShopFilterView({
           )}
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
+          {filteredProducts.length > 0 && (
             <div className="pt-8 border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-neutral-500">
                 <span>Items per page:</span>
                 <select
                   value={itemsPerPage}
-                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="py-1 px-2.5 bg-neutral-100 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-800 cursor-pointer focus:outline-hidden"
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="py-1 px-2.5 bg-neutral-100 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-800 cursor-pointer focus:outline-hidden hover:bg-neutral-200 transition"
                 >
+                  <option value={12}>12 per page</option>
                   <option value={24}>24 per page</option>
                   <option value={36}>36 per page</option>
-                  <option value={72}>72 per page</option>
                   <option value={9999}>All Products</option>
                 </select>
               </div>
 
               {/* Number Buttons */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                  title="Previous Page"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                    title="Previous Page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
 
-                {pageNumbers.map((page, index) => {
-                  if (page === "...") {
+                  {pageNumbers.map((page, index) => {
+                    if (page === "...") {
+                      return (
+                        <span key={`ellipsis-${index}`} className="px-2 text-neutral-400 text-xs">
+                          ...
+                        </span>
+                      );
+                    }
+                    const isCurrent = page === currentPage;
                     return (
-                      <span key={`ellipsis-${index}`} className="px-2 text-neutral-400 text-xs">
-                        ...
-                      </span>
+                      <button
+                        key={`page-${page}`}
+                        type="button"
+                        onClick={() => handlePageChange(page as number)}
+                        className={`w-9 h-9 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                          isCurrent
+                            ? "bg-black text-white shadow-xs"
+                            : "border border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                        }`}
+                      >
+                        {page}
+                      </button>
                     );
-                  }
-                  const isCurrent = page === currentPage;
-                  return (
-                    <button
-                      key={`page-${page}`}
-                      type="button"
-                      onClick={() => handlePageChange(page as number)}
-                      className={`w-9 h-9 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                        isCurrent
-                          ? "bg-black text-white shadow-xs"
-                          : "border border-neutral-200 text-neutral-700 hover:bg-neutral-100"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+                  })}
 
-                <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                  title="Next Page"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                    title="Next Page"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
