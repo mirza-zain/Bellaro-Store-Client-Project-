@@ -4,6 +4,7 @@ import path from "node:path";
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
+    agentUpgrade: "security",
     agentFeedback: true,
     serverActions: {
       bodySizeLimit: "10mb",
