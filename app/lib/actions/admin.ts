@@ -3,7 +3,7 @@
 import { db } from "@/app/lib/db";
 import { orders, products, discountCodes, storeSettings, Order, Product, ProductVariant, DiscountCode } from "@/app/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { connection } from "next/server";
 import { headers } from "next/headers";
 import { auth } from "@/app/lib/auth";
@@ -573,9 +573,12 @@ export async function addProductAction(formData: FormData) {
       variants: parsedVariants,
     });
 
+    updateTag("products");
     revalidatePath("/admin");
     revalidatePath("/admin/manageProducts");
     revalidatePath("/products");
+    revalidatePath("/");
+    revalidatePath("/shop");
     return { success: true };
   } catch (error) {
     console.error("Error adding product:", error);
@@ -588,8 +591,13 @@ export async function deleteProductAction(productId: number) {
     await verifyAdminSession();
     await ensureTablesExist();
     await db.delete(products).where(eq(products.id, productId));
+    updateTag("products");
+    updateTag(`product-${productId}`);
     revalidatePath("/admin");
     revalidatePath("/admin/manageProducts");
+    revalidatePath("/products");
+    revalidatePath("/");
+    revalidatePath("/shop");
     return { success: true };
   } catch (error) {
     console.error("Error deleting product:", error);
@@ -781,10 +789,14 @@ export async function updateProductAction(productId: number, formData: FormData)
 
     await db.update(products).set(updateFields).where(eq(products.id, productId));
 
+    updateTag("products");
+    updateTag(`product-${productId}`);
     revalidatePath("/admin");
     revalidatePath("/admin/manageProducts");
     revalidatePath("/products");
     revalidatePath(`/products/${productId}`);
+    revalidatePath("/");
+    revalidatePath("/shop");
     return { success: true };
   } catch (error) {
     console.error("Error updating product:", error);
@@ -797,7 +809,15 @@ export async function updateProductStockAction(productId: number, newStock: numb
     await verifyAdminSession();
     await ensureTablesExist();
     await db.update(products).set({ stock: newStock.toString() }).where(eq(products.id, productId));
+    updateTag("products");
+    updateTag(`product-${productId}`);
     revalidatePath("/admin");
+    revalidatePath("/admin/manageProducts");
+    revalidatePath("/products");
+    revalidatePath(`/products/${productId}`);
+    revalidatePath("/");
+    revalidatePath("/shop");
+    return { success: true };
     revalidatePath("/admin/manageProducts");
     revalidatePath("/products");
     return { success: true };

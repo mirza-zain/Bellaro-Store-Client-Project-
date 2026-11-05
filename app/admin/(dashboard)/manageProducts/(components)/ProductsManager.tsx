@@ -33,6 +33,7 @@ import {
   deleteProductAction,
   getAllProductsAction,
 } from "@/app/lib/actions/admin";
+import { getOptimizedImageUrl } from "@/app/lib/utils/image";
 
 const FOOTWEAR_COLOR_PRESETS = [
   { name: "White", hex: "#ffffff" },
@@ -956,10 +957,10 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                   <div className="flex items-start gap-3">
                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-white shrink-0 border border-neutral-200">
                       <Image
-                        src={p.image || "/images/img1.jpg"}
+                        src={getOptimizedImageUrl(p.image, 150)}
                         alt={p.name}
                         fill
-                        unoptimized
+                        sizes="56px"
                         className="object-cover"
                       />
                     </div>
@@ -1127,10 +1128,10 @@ export default function ProductsManager({ initialProducts }: ProductsManagerProp
                         <div className="flex items-center gap-3">
                           <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200">
                             <Image
-                              src={p.image || "/images/img1.jpg"}
+                              src={getOptimizedImageUrl(p.image, 150)}
                               alt={p.name}
                               fill
-                              unoptimized
+                              sizes="48px"
                               className="object-cover"
                             />
                           </div>

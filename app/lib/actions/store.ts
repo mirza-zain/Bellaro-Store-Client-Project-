@@ -4,7 +4,7 @@ import { db } from "@/app/lib/db";
 import { products, Product } from "@/app/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { ensureTablesExist } from "@/app/lib/actions/admin";
-import { connection } from "next/server";
+import { unstable_cache } from "next/cache";
 
 export type StoreFilterOptions = {
   category?: string;
@@ -14,17 +14,56 @@ export type StoreFilterOptions = {
   limit?: number;
 };
 
+/**
+ * High-performance in-memory / edge-cached fetcher for active store products.
+ * Tagged with 'products' and purged immediately whenever an admin updates the catalog.
+ */
+const fetchCachedAllProducts = unstable_cache(
+  async (): Promise<Product[]> => {
+    try {
+      await ensureTablesExist();
+      return await db.select().from(products).orderBy(desc(products.id));
+    } catch (error) {
+      console.error("Error fetching cached store products from DB:", error);
+      return [];
+    }
+  },
+  ["all-store-products-cache"],
+  {
+    tags: ["products"],
+    revalidate: 86400, // 24 hours fallback, immediately purged on update
+  }
+);
+
+/**
+ * High-performance cached fetcher for individual product detail views.
+ */
+const fetchCachedProductById = unstable_cache(
+  async (productId: number): Promise<Product | null> => {
+    try {
+      await ensureTablesExist();
+      const result = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+      return result.length > 0 ? result[0] : null;
+    } catch (error) {
+      console.error(`Error fetching cached product #${productId} from DB:`, error);
+      return null;
+    }
+  },
+  ["single-product-cache"],
+  {
+    tags: ["products"],
+    revalidate: 86400,
+  }
+);
+
 export async function getStoreProducts(
   options?: StoreFilterOptions
 ): Promise<Product[]> {
-  await connection();
   try {
-    await ensureTablesExist();
+    const dbProducts = await fetchCachedAllProducts();
+    let items = [...dbProducts];
 
-    const dbProducts = await db.select().from(products).orderBy(desc(products.id));
-    let items = dbProducts;
-
-    // Filter by Category
+    // Filter by Category (Footwear/Shoes flexible alias support)
     if (options?.category && options.category.toLowerCase() !== "all") {
       const targetCat = options.category.toLowerCase();
       items = items.filter((p) => {
@@ -78,16 +117,7 @@ export async function getStoreProducts(
 }
 
 export async function getProductById(id: number): Promise<Product | null> {
-  await connection();
-  try {
-    await ensureTablesExist();
-    const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
-    if (result.length > 0) return result[0];
-    return null;
-  } catch (error) {
-    console.error("Error fetching product by id:", error);
-    return null;
-  }
+  return await fetchCachedProductById(id);
 }
 
 export type NavCategoryGroup = {
@@ -96,59 +126,61 @@ export type NavCategoryGroup = {
   subCategories: { name: string; href: string }[];
 };
 
-export async function getStoreNavCategoriesAction(): Promise<NavCategoryGroup[]> {
-  try {
-    await connection();
-  } catch {}
-  try {
-    await ensureTablesExist();
-    const rows = await db
-      .select({
-        category: products.category,
-        subCategory: products.subCategory,
-      })
-      .from(products);
+const fetchCachedNavCategories = unstable_cache(
+  async (): Promise<NavCategoryGroup[]> => {
+    try {
+      const rows = await fetchCachedAllProducts();
 
-    if (!rows || rows.length === 0) {
+      if (!rows || rows.length === 0) {
+        return [];
+      }
+
+      const catMap = new Map<string, Set<string>>();
+      for (const r of rows) {
+        const cat = r.category?.trim();
+        if (!cat) continue;
+        if (!catMap.has(cat)) {
+          catMap.set(cat, new Set());
+        }
+        const sub = r.subCategory?.trim();
+        if (sub && sub.toLowerCase() !== "general" && sub.toLowerCase() !== "default") {
+          catMap.get(cat)!.add(sub);
+        }
+      }
+
+      const navGroups: NavCategoryGroup[] = [];
+      for (const [catName, subSet] of catMap.entries()) {
+        const subCategories: { name: string; href: string }[] = Array.from(subSet).map((sub) => ({
+          name: sub,
+          href: `/products?category=${encodeURIComponent(catName)}&subCategory=${encodeURIComponent(sub)}`,
+        }));
+
+        // Add "All {category}" entry
+        subCategories.push({
+          name: `All ${catName}`,
+          href: `/products?category=${encodeURIComponent(catName)}`,
+        });
+
+        navGroups.push({
+          category: catName,
+          href: `/products?category=${encodeURIComponent(catName)}`,
+          subCategories,
+        });
+      }
+
+      return navGroups;
+    } catch (error) {
+      console.error("Error generating nav categories:", error);
       return [];
     }
-
-    const catMap = new Map<string, Set<string>>();
-    for (const r of rows) {
-      const cat = r.category?.trim();
-      if (!cat) continue;
-      if (!catMap.has(cat)) {
-        catMap.set(cat, new Set());
-      }
-      const sub = r.subCategory?.trim();
-      if (sub && sub.toLowerCase() !== "general" && sub.toLowerCase() !== "default") {
-        catMap.get(cat)!.add(sub);
-      }
-    }
-
-    const navGroups: NavCategoryGroup[] = [];
-    for (const [catName, subSet] of catMap.entries()) {
-      const subCategories: { name: string; href: string }[] = Array.from(subSet).map((sub) => ({
-        name: sub,
-        href: `/products?category=${encodeURIComponent(catName)}&subCategory=${encodeURIComponent(sub)}`,
-      }));
-
-      // Add "All {category}" entry
-      subCategories.push({
-        name: `All ${catName}`,
-        href: `/products?category=${encodeURIComponent(catName)}`,
-      });
-
-      navGroups.push({
-        category: catName,
-        href: `/products?category=${encodeURIComponent(catName)}`,
-        subCategories,
-      });
-    }
-
-    return navGroups;
-  } catch (error) {
-    console.error("Error fetching nav categories from db:", error);
-    return [];
+  },
+  ["store-nav-categories-cache"],
+  {
+    tags: ["products", "categories"],
+    revalidate: 86400,
   }
+);
+
+export async function getStoreNavCategoriesAction(): Promise<NavCategoryGroup[]> {
+  return await fetchCachedNavCategories();
 }

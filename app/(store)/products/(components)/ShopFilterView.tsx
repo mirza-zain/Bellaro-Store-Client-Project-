@@ -22,6 +22,7 @@ import {
   Package,
 } from "lucide-react";
 import { Product } from "@/app/db/schema";
+import { getOptimizedImageUrl } from "@/app/lib/utils/image";
 
 interface ShopFilterViewProps {
   initialProducts: Product[];
@@ -750,7 +751,7 @@ export default function ShopFilterView({
                 isSidebarOpen ? "lg:grid-cols-3" : "md:grid-cols-3 lg:grid-cols-4"
               } gap-6`}
             >
-              {paginatedProducts.map((item) => {
+              {paginatedProducts.map((item, index) => {
                 const stockNum = Number(item.stock);
                 const isOutOfStock = stockNum <= 0;
 
@@ -765,9 +766,10 @@ export default function ShopFilterView({
                     {/* Thumbnail Image Container */}
                     <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
                       <Image
-                        src={item.image || "/images/img1.jpg"}
+                        src={getOptimizedImageUrl(item.image, 600)}
                         alt={item.name}
                         fill
+                        priority={index < 4}
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                       />

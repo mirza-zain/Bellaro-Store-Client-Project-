@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getOptimizedImageUrl } from "@/app/lib/utils/image";
 
 interface ProductImageGalleryProps {
   images: string[];
@@ -77,10 +78,10 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Subtle luminous ambient aura matching product colors */}
+        {/* Subtle luminous ambient aura matching product colors (tiny low-res payload for blur) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20 blur-2xl">
           <Image
-            src={currentImage}
+            src={getOptimizedImageUrl(currentImage, 100)}
             alt=""
             fill
             className="object-cover scale-110"
@@ -91,7 +92,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
         {/* Foreground full product image: zero cropping, crisp details */}
         <div className="relative w-full h-full z-10 flex items-center justify-center p-2 sm:p-3 pointer-events-none">
           <Image
-            src={currentImage}
+            src={getOptimizedImageUrl(currentImage, 1000)}
             alt={`${name} - View ${selectedIndex + 1}`}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
@@ -163,7 +164,7 @@ export default function ProductImageGallery({ images, name }: ProductImageGaller
                 }`}
               >
                 <Image
-                  src={imgUrl}
+                  src={getOptimizedImageUrl(imgUrl, 200)}
                   alt={`${name} thumbnail ${index + 1}`}
                   fill
                   className="object-contain p-1 pointer-events-none"

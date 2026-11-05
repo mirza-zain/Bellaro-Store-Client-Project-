@@ -29,6 +29,7 @@ import {
   createOrderAction,
   validateDiscountCodeAction,
 } from "@/app/lib/actions/checkout";
+import { getOptimizedImageUrl } from "@/app/lib/utils/image";
 import { useCart } from "@/app/context/CartContext";
 import { ShippingRule } from "@/app/db/schema";
 import { getShippingRulesAction } from "@/app/lib/actions/shipping";
@@ -1184,7 +1185,7 @@ export default function CheckoutPage() {
               {items.map((item) => (
                 <div key={item.id} className="py-3 flex items-center gap-3">
                   <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200">
-                    <Image src={item.image || "/images/img1.jpg"} alt={item.name} fill className="object-cover" />
+                    <Image src={getOptimizedImageUrl(item.image, 150)} alt={item.name} fill sizes="56px" className="object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-neutral-900 truncate">{item.name}</p>

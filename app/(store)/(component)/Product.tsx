@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getStoreProducts } from "@/app/lib/actions/store";
+import { getOptimizedImageUrl } from "@/app/lib/utils/image";
 
 type Prop = {
   limit?: number;
@@ -71,32 +72,35 @@ export default async function Products({ limit, category }: Prop) {
   return (
     <div className="w-full">
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6 mt-6">
-        {finalProducts.map((item) => (
-          <Link
-            href={`/products/${item.id}`}
-            key={item.id}
-            className="group flex flex-col gap-2 sm:gap-3"
-          >
-            <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
-              <Image
-                src={
-                  item.image && !item.image.includes("/images/img1.jpg")
-                    ? item.image
-                    : item.category === "Perfumes"
-                    ? "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80"
-                    : "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-                }
-                alt={item.name}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-              />
-              {Number(item.stock) <= 0 && (
-                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-neutral-900/90 text-white text-[10px] sm:text-[11px] font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg backdrop-blur-xs">
-                  Out of Stock
-                </div>
-              )}
-            </div>
+        {finalProducts.map((item, index) => {
+          const rawImage =
+            item.image && !item.image.includes("/images/img1.jpg")
+              ? item.image
+              : item.category === "Perfumes"
+              ? "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=800&q=80"
+              : "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80";
+
+          return (
+            <Link
+              href={`/products/${item.id}`}
+              key={item.id}
+              className="group flex flex-col gap-2 sm:gap-3"
+            >
+              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-100 border border-neutral-200/60 shadow-xs">
+                <Image
+                  src={getOptimizedImageUrl(rawImage, 600)}
+                  alt={item.name}
+                  fill
+                  priority={index < 4}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                />
+                {Number(item.stock) <= 0 && (
+                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-neutral-900/90 text-white text-[10px] sm:text-[11px] font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg backdrop-blur-xs">
+                    Out of Stock
+                  </div>
+                )}
+              </div>
             <div>
               <h3 className="text-xs sm:text-base font-semibold text-neutral-900 group-hover:text-neutral-600 transition truncate">
                 {item.name}
@@ -149,7 +153,8 @@ export default async function Products({ limit, category }: Prop) {
               </p>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

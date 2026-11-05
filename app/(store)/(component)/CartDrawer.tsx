@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { getOptimizedImageUrl } from "@/app/lib/utils/image";
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -161,9 +162,10 @@ export default function CartDrawer() {
                     className="relative w-18 h-18 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200/80 shrink-0 block"
                   >
                     <Image
-                      src={item.image || "/images/img1.jpg"}
+                      src={getOptimizedImageUrl(item.image, 150)}
                       alt={item.name}
                       fill
+                      sizes="72px"
                       className="object-cover"
                     />
                   </Link>

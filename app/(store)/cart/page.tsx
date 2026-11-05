@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { getOptimizedImageUrl } from "@/app/lib/utils/image";
 
 export default function CartPage() {
   const {
@@ -91,9 +92,10 @@ export default function CartPage() {
                     className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200 block"
                   >
                     <Image
-                      src={item.image || "/images/img1.jpg"}
+                      src={getOptimizedImageUrl(item.image, 200)}
                       alt={item.name}
                       fill
+                      sizes="96px"
                       className="object-cover hover:scale-105 transition-transform"
                     />
                   </Link>
