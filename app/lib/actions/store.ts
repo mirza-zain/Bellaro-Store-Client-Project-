@@ -102,6 +102,15 @@ export async function getStoreProducts(
       } else if (options.sort === "name-asc") {
         items.sort((a, b) => a.name.localeCompare(b.name));
       }
+    } else {
+      // Default: Footwear / Shoes prioritized first (newest to oldest), then secondary categories like Perfumes
+      items.sort((a, b) => {
+        const aIsFootwear = a.category?.toLowerCase() === "footwear" || a.category?.toLowerCase() === "shoes";
+        const bIsFootwear = b.category?.toLowerCase() === "footwear" || b.category?.toLowerCase() === "shoes";
+        if (aIsFootwear && !bIsFootwear) return -1;
+        if (!aIsFootwear && bIsFootwear) return 1;
+        return b.id - a.id;
+      });
     }
 
     // Limit

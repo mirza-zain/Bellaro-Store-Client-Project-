@@ -175,8 +175,16 @@ export default function ShopFilterView({
     } else if (sortBy === "in-stock") {
       result.sort((a, b) => Number(b.stock) - Number(a.stock));
     } else {
-      // "featured": newest first (by id desc)
-      result.sort((a, b) => b.id - a.id);
+      // "featured" default sorting:
+      // Shoes & Footwear are Bellaro's core primary product line -> prioritize Footwear first, then Perfumes / secondary categories
+      // Within each category, newest products (by id desc) appear first.
+      result.sort((a, b) => {
+        const aIsFootwear = a.category?.toLowerCase() === "footwear" || a.category?.toLowerCase() === "shoes";
+        const bIsFootwear = b.category?.toLowerCase() === "footwear" || b.category?.toLowerCase() === "shoes";
+        if (aIsFootwear && !bIsFootwear) return -1;
+        if (!aIsFootwear && bIsFootwear) return 1;
+        return b.id - a.id;
+      });
     }
 
     return result;
