@@ -20,7 +20,7 @@ export default function HomePage() {
         <div className="relative w-full h-[260px] sm:h-[340px] md:h-[420px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-neutral-200/60 bg-neutral-950">
           <Image
             src="/images/hero-banner.jpg"
-            alt="Bellaro Handcrafted Footwear & Signature Perfumes"
+            alt="Bellaro Handcrafted Leather Footwear"
             fill
             priority
             sizes="(max-width: 768px) 100vw, 1280px"
@@ -36,7 +36,7 @@ export default function HomePage() {
                 Handcrafted in Karachi
               </span>
               <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold uppercase tracking-tight leading-tight mt-0.5">
-                Footwear &amp; Signature Parfums
+                Handcrafted Leather Footwear
               </h1>
             </div>
 
