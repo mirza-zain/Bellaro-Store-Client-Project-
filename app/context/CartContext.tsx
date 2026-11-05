@@ -20,6 +20,7 @@ interface CartContextType {
   totalItems: number;
   subtotal: number;
   shippingFee: number;
+  isFreeShippingActive: boolean;
   freeShippingThreshold: number;
   progressToFreeShipping: number;
   isDrawerOpen: boolean;
@@ -147,17 +148,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (r) => r.isDefault || r.city.trim().toUpperCase() === "DEFAULT"
   );
   const freeThreshold = defaultRule ? Number(defaultRule.freeShippingThreshold) || 8000 : 8000;
-  const defaultFee = defaultRule ? Number(defaultRule.charge) || 250 : 250;
-  const isFreeActive = defaultRule?.isActive ?? true;
+  const defaultFee = defaultRule ? Number(defaultRule.charge) || 350 : 350;
+  const isFreeActive = Boolean(defaultRule?.isActive);
 
   const shippingFee = useMemo(
-    () => (items.length === 0 || (isFreeActive && subtotal >= freeThreshold) ? 0 : defaultFee),
+    () => (items.length === 0 ? 0 : (isFreeActive && subtotal >= freeThreshold) ? 0 : defaultFee),
     [items.length, subtotal, isFreeActive, freeThreshold, defaultFee]
   );
 
   const progressToFreeShipping = useMemo(
-    () => Math.min((subtotal / freeThreshold) * 100, 100),
-    [subtotal, freeThreshold]
+    () => (isFreeActive ? Math.min((subtotal / freeThreshold) * 100, 100) : 0),
+    [subtotal, freeThreshold, isFreeActive]
   );
 
   return (
@@ -168,6 +169,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         totalItems,
         subtotal,
         shippingFee,
+        isFreeShippingActive: isFreeActive,
         freeShippingThreshold: freeThreshold,
         progressToFreeShipping,
         isDrawerOpen,

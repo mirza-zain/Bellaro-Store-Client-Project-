@@ -25,6 +25,7 @@ export default function CartDrawer() {
     totalItems,
     subtotal,
     shippingFee,
+    isFreeShippingActive,
     freeShippingThreshold,
     progressToFreeShipping,
     isDrawerOpen,
@@ -106,23 +107,25 @@ export default function CartDrawer() {
             </button>
           </div>
 
-          {/* Free Shipping Meter */}
-          <div className="px-5 py-3.5 bg-neutral-50 border-b border-neutral-200/80">
-            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800 mb-1.5">
-              <Truck className="w-3.5 h-3.5 text-black" />
-              <span>
-                {subtotal >= freeShippingThreshold
-                  ? "🎉 You unlocked FREE Express Shipping!"
-                  : `Add PKR ${(freeShippingThreshold - subtotal).toLocaleString()} more for FREE shipping`}
-              </span>
+          {/* Free Shipping Meter (Only visible when Free Shipping is enabled) */}
+          {isFreeShippingActive && (
+            <div className="px-5 py-3.5 bg-neutral-50 border-b border-neutral-200/80">
+              <div className="flex items-center gap-2 text-xs font-semibold text-neutral-800 mb-1.5">
+                <Truck className="w-3.5 h-3.5 text-black" />
+                <span>
+                  {subtotal >= freeShippingThreshold
+                    ? "🎉 You unlocked FREE Express Shipping!"
+                    : `Add PKR ${(freeShippingThreshold - subtotal).toLocaleString()} more for FREE shipping`}
+                </span>
+              </div>
+              <div className="w-full bg-neutral-200 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-black h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progressToFreeShipping}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-neutral-200 h-1.5 rounded-full overflow-hidden">
-              <div
-                className="bg-black h-full rounded-full transition-all duration-500"
-                style={{ width: `${progressToFreeShipping}%` }}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Items List Body */}
           <div className="flex-1 overflow-y-auto p-5 divide-y divide-neutral-100">
@@ -252,7 +255,7 @@ export default function CartDrawer() {
                 <div className="flex justify-between">
                   <span>Shipping</span>
                   <span className="font-semibold text-neutral-900">
-                    {shippingFee === 0 ? "FREE" : `PKR ${shippingFee}`}
+                    {isFreeShippingActive && shippingFee === 0 ? "FREE" : `PKR ${shippingFee.toLocaleString()}`}
                   </span>
                 </div>
                 <div className="pt-2 border-t border-neutral-200 flex justify-between text-base font-bold text-neutral-900">

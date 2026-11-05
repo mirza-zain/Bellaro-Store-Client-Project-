@@ -61,10 +61,10 @@ export default function PricingAndShippingManager({
   ) || {
     id: 0,
     city: "DEFAULT",
-    charge: "250",
+    charge: "350",
     freeShippingThreshold: "8000",
     isDefault: true,
-    isActive: true,
+    isActive: false,
     createdAt: null,
   };
 

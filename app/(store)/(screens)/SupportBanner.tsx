@@ -5,8 +5,8 @@ export default function SupportBanner() {
   const supportItems = [
     {
       id: 1,
-      title: "Free Shipping",
-      subTitle: "On orders over PKR 8000",
+      title: "Express Delivery",
+      subTitle: "Fast doorstep delivery nationwide",
       icon: <Truck className="w-6 h-6 md:w-8 md:h-8" />,
     },
     {

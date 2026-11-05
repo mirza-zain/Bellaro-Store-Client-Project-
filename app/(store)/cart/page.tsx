@@ -13,6 +13,7 @@ export default function CartPage() {
     isLoaded,
     subtotal,
     shippingFee,
+    isFreeShippingActive,
     freeShippingThreshold,
     progressToFreeShipping,
     updateQuantity,
@@ -66,23 +67,25 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mt-10">
           {/* Items List */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Free Shipping Bar */}
-            <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200">
-              <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900 mb-2">
-                <Truck className="w-4 h-4" />
-                <span>
-                  {subtotal >= freeShippingThreshold
-                    ? "🎉 You have qualified for FREE Shipping!"
-                    : `Add PKR ${(freeShippingThreshold - subtotal).toLocaleString()} more for FREE shipping!`}
-                </span>
+            {/* Free Shipping Bar (Only visible when Free Shipping is active) */}
+            {isFreeShippingActive && (
+              <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200">
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900 mb-2">
+                  <Truck className="w-4 h-4" />
+                  <span>
+                    {subtotal >= freeShippingThreshold
+                      ? "🎉 You have qualified for FREE Shipping!"
+                      : `Add PKR ${(freeShippingThreshold - subtotal).toLocaleString()} more for FREE shipping!`}
+                  </span>
+                </div>
+                <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-black h-full rounded-full transition-all duration-500"
+                    style={{ width: `${progressToFreeShipping}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full bg-neutral-200 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-black h-full rounded-full transition-all duration-500"
-                  style={{ width: `${progressToFreeShipping}%` }}
-                />
-              </div>
-            </div>
+            )}
 
             <div className="divide-y divide-neutral-200 border-t border-b border-neutral-200">
               {items.map((item) => (
@@ -172,7 +175,7 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-neutral-600">
                 <span>Estimated Delivery</span>
-                <span>{shippingFee === 0 ? "FREE" : `PKR ${shippingFee}`}</span>
+                <span>{isFreeShippingActive && shippingFee === 0 ? "FREE" : `PKR ${shippingFee.toLocaleString()}`}</span>
               </div>
               <div className="pt-3 border-t border-neutral-200 flex justify-between text-base font-bold text-neutral-900">
                 <span>Total</span>

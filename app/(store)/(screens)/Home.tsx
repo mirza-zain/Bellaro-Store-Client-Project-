@@ -95,8 +95,8 @@ export default function HomePage() {
           <div className="flex items-center gap-2 text-neutral-700">
             <Sparkles className="w-4 h-4 text-black shrink-0" />
             <div>
-              <p className="font-bold text-neutral-900 leading-tight">Free Shipping</p>
-              <p className="text-[10px] text-neutral-500">Over PKR 8,000</p>
+              <p className="font-bold text-neutral-900 leading-tight">Express Delivery</p>
+              <p className="text-[10px] text-neutral-500">Fast doorstep delivery</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-neutral-700">

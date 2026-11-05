@@ -3,6 +3,7 @@ import { ShippingRule } from "@/app/db/schema";
 export type ShippingCalculation = {
   fee: number;
   isFree: boolean;
+  isFreeShippingActive: boolean;
   freeThreshold: number;
   remainingForFree: number;
   rateType: "default" | "city" | "free";
@@ -24,29 +25,30 @@ export function computeShippingFee(
   ) || {
     id: 0,
     city: "DEFAULT",
-    charge: "250",
+    charge: "350",
     freeShippingThreshold: "8000",
     isDefault: true,
-    isActive: true,
+    isActive: false,
     createdAt: null,
   };
 
-  const defaultFee = Number(defaultRule.charge) || 250;
+  const defaultFee = Number(defaultRule.charge) || 350;
   const freeThreshold = Number(defaultRule.freeShippingThreshold) || 8000;
-  const isFreeActive = defaultRule.isActive ?? true;
+  const isFreeActive = Boolean(defaultRule.isActive);
 
   // Check if order qualifies for Free Shipping threshold
   if (isFreeActive && subtotal >= freeThreshold) {
     return {
       fee: 0,
       isFree: true,
+      isFreeShippingActive: true,
       freeThreshold,
       remainingForFree: 0,
       rateType: "free",
     };
   }
 
-  const remainingForFree = Math.max(0, freeThreshold - subtotal);
+  const remainingForFree = isFreeActive ? Math.max(0, freeThreshold - subtotal) : 0;
 
   // If a city is provided, look for a matching city-specific rate (case-insensitive)
   if (city && city.trim()) {
@@ -61,6 +63,7 @@ export function computeShippingFee(
       return {
         fee: Number(cityRule.charge) || 0,
         isFree: false,
+        isFreeShippingActive: isFreeActive,
         freeThreshold,
         remainingForFree,
         rateType: "city",
@@ -73,6 +76,7 @@ export function computeShippingFee(
   return {
     fee: defaultFee,
     isFree: false,
+    isFreeShippingActive: isFreeActive,
     freeThreshold,
     remainingForFree,
     rateType: "default",

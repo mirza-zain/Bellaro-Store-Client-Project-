@@ -100,10 +100,18 @@ export async function addOrUpdateCityShippingRuleAction(input: {
     const thresholdStr = (input.freeShippingThreshold || 8000).toString();
 
     if (isDefaultName) {
+      const currentDefault = await db
+        .select({ isActive: shippingRules.isActive })
+        .from(shippingRules)
+        .where(sql`${shippingRules.isDefault} = true OR UPPER(${shippingRules.city}) = 'DEFAULT'`)
+        .limit(1);
+
+      const isCurrentActive = currentDefault[0]?.isActive ?? false;
+
       return await saveDefaultShippingAction({
         charge: input.charge,
         freeShippingThreshold: input.freeShippingThreshold || 8000,
-        isActive: true,
+        isActive: isCurrentActive,
       });
     }
 

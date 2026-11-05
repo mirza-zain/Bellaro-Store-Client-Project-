@@ -1279,8 +1279,8 @@ export default function CheckoutPage() {
                     </span>
                   )}
                 </div>
-                <span className={`font-semibold ${shippingFee === 0 ? "text-emerald-600" : "text-neutral-900"}`}>
-                  {shippingFee === 0 ? "FREE" : `PKR ${shippingFee.toLocaleString()}`}
+                <span className={`font-semibold ${shippingCalculation.isFree ? "text-emerald-600" : "text-neutral-900"}`}>
+                  {shippingCalculation.isFree ? "FREE" : `PKR ${shippingFee.toLocaleString()}`}
                 </span>
               </div>
 
